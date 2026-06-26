@@ -1,726 +1,489 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>QR Scanner</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: Arial, sans-serif;
-            background: #0a0a0a;
-            color: white;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        
-        .header h1 {
-            font-size: 28px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .header p {
-            color: #888;
-            font-size: 14px;
-        }
-        
-        .scanner-box {
-            width: 100%;
-            max-width: 400px;
-            aspect-ratio: 1/1;
-            background: #1a1a1a;
-            border-radius: 20px;
-            overflow: hidden;
-            border: 3px solid #667eea;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        #video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: none;
-        }
-        
-        #video.active {
-            display: block;
-        }
-        
-        .placeholder {
-            color: #555;
-            text-align: center;
-            font-size: 18px;
-        }
-        
-        .placeholder .icon {
-            font-size: 60px;
-            display: block;
-            margin-bottom: 10px;
-        }
-        
-        .scan-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            pointer-events: none;
-            display: none;
-        }
-        
-        .scan-overlay.active {
-            display: block;
-        }
-        
-        .scan-frame {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 70%;
-            height: 70%;
-            border: 2px solid rgba(102, 126, 234, 0.8);
-            border-radius: 15px;
-            box-shadow: 0 0 0 4000px rgba(0,0,0,0.5);
-        }
-        
-        .scan-line {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 60%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #667eea, transparent);
-            animation: scan 2s infinite;
-        }
-        
-        @keyframes scan {
-            0% { transform: translate(-50%, -60%); }
-            50% { transform: translate(-50%, 60%); }
-            100% { transform: translate(-50%, -60%); }
-        }
-        
-        .controls {
-            margin: 20px 0;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            width: 100%;
-            max-width: 400px;
-        }
-        
-        .btn {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 50px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            flex: 1;
-            min-width: 120px;
-        }
-        
-        .btn-start {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-        
-        .btn-start:active {
-            transform: scale(0.95);
-        }
-        
-        .btn-stop {
-            background: #e53e3e;
-            color: white;
-        }
-        
-        .btn-scan {
-            background: linear-gradient(135deg, #48bb78, #38a169);
-            color: white;
-            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4);
-            font-size: 20px;
-            padding: 18px 30px;
-        }
-        
-        .btn-scan:active {
-            transform: scale(0.95);
-        }
-        
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        #result {
-            width: 100%;
-            max-width: 400px;
-            padding: 15px;
-            border-radius: 15px;
-            text-align: center;
-            font-size: 18px;
-            font-weight: bold;
-            margin: 10px 0;
-            min-height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .result-idle {
-            background: rgba(255,255,255,0.05);
-            color: #888;
-        }
-        
-        .result-scanning {
-            background: rgba(102, 126, 234, 0.2);
-            color: #667eea;
-        }
-        
-        .result-done {
-            background: rgba(72, 187, 120, 0.2);
-            color: #48bb78;
-        }
-        
-        .result-error {
-            background: rgba(245, 87, 108, 0.2);
-            color: #f5576c;
-        }
-        
-        .result-walkin {
-            background: rgba(251, 191, 36, 0.2);
-            color: #f6ad55;
-        }
-        
-        #status {
-            font-size: 14px;
-            color: #666;
-            text-align: center;
-            margin: 5px 0;
-        }
-        
-        .manual-entry {
-            width: 100%;
-            max-width: 400px;
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .manual-entry input {
-            flex: 1;
-            padding: 12px;
-            border-radius: 10px;
-            border: 1px solid #333;
-            background: #1a1a1a;
-            color: white;
-            font-size: 16px;
-        }
-        
-        .manual-entry input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .manual-entry input::placeholder {
-            color: #555;
-        }
-        
-        .btn-small {
-            padding: 12px 20px;
-            font-size: 14px;
-            min-width: auto;
-            flex: 0 0 auto;
-        }
-        
-        #walkin-form {
-            display: none;
-            width: 100%;
-            max-width: 400px;
-            padding: 20px;
-            background: #1a1a1a;
-            border-radius: 15px;
-            margin-top: 10px;
-            border: 1px solid #333;
-        }
-        
-        #walkin-form h3 {
-            text-align: center;
-            color: #f6ad55;
-            margin-bottom: 15px;
-        }
-        
-        #walkin-form input {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border: 1px solid #333;
-            border-radius: 10px;
-            background: #0a0a0a;
-            color: white;
-            font-size: 16px;
-        }
-        
-        #walkin-form input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        #walkin-form input::placeholder {
-            color: #555;
-        }
-        
-        .badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            margin-left: 10px;
-        }
-        
-        .badge-on {
-            background: #48bb78;
-            color: white;
-        }
-        
-        .badge-off {
-            background: #666;
-            color: white;
-        }
-        
-        @media (max-width: 480px) {
-            .header h1 { font-size: 22px; }
-            .btn { font-size: 16px; padding: 12px 20px; }
-            .btn-scan { font-size: 18px; padding: 15px 20px; }
-            #result { font-size: 16px; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Event Check-in</title>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #181b24;
+    --border: #262b38;
+    --accent: #4f8ef7;
+    --success: #34d399;
+    --error: #f87171;
+    --warn: #fbbf24;
+    --text: #e8eaf0;
+    --muted: #6b7280;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+    gap: 14px;
+  }
+
+  h1 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: var(--text);
+  }
+  h1 span { color: var(--accent); }
+
+  /* ── Camera viewport ── */
+  .cam-wrap {
+    width: 100%;
+    max-width: 360px;
+    aspect-ratio: 1;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #000;
+    position: relative;
+    border: 2px solid var(--border);
+  }
+
+  #video {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  canvas#overlay {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+  }
+
+  .cam-idle {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 8px; color: var(--muted); font-size: 14px;
+  }
+  .cam-idle svg { width: 48px; height: 48px; opacity: 0.4; }
+
+  /* scanning frame corners */
+  .frame {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60%; height: 60%;
+    pointer-events: none;
+  }
+  .frame::before, .frame::after,
+  .frame span::before, .frame span::after {
+    content: ''; position: absolute;
+    width: 22px; height: 22px;
+    border-color: var(--accent); border-style: solid;
+    border-width: 0;
+  }
+  .frame::before  { top: 0; left: 0;  border-top-width: 3px; border-left-width: 3px;  border-radius: 3px 0 0 0; }
+  .frame::after   { top: 0; right: 0; border-top-width: 3px; border-right-width: 3px; border-radius: 0 3px 0 0; }
+  .frame span::before { bottom: 0; left: 0;  border-bottom-width: 3px; border-left-width: 3px;  border-radius: 0 0 0 3px; }
+  .frame span::after  { bottom: 0; right: 0; border-bottom-width: 3px; border-right-width: 3px; border-radius: 0 0 3px 0; }
+
+  /* scanning line */
+  .scan-line {
+    position: absolute;
+    left: 20%; right: 20%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    animation: sweep 1.8s ease-in-out infinite;
+    border-radius: 2px;
+  }
+  @keyframes sweep {
+    0%   { top: 20%; }
+    50%  { top: 80%; }
+    100% { top: 20%; }
+  }
+
+  /* ── Toast / result ── */
+  #toast {
+    width: 100%; max-width: 360px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+    background: var(--surface);
+    color: var(--muted);
+    border: 1.5px solid var(--border);
+    min-height: 52px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+  }
+  #toast.success { background: rgba(52,211,153,.1); color: var(--success); border-color: var(--success); }
+  #toast.error   { background: rgba(248,113,113,.1); color: var(--error);   border-color: var(--error); }
+  #toast.loading { background: rgba(79,142,247,.1);  color: var(--accent);  border-color: var(--accent); }
+  #toast.warn    { background: rgba(251,191,36,.1);  color: var(--warn);    border-color: var(--warn); }
+
+  /* ── Buttons ── */
+  .btn {
+    width: 100%; max-width: 360px;
+    padding: 15px;
+    border: none; border-radius: 12px;
+    font-size: 16px; font-weight: 700;
+    cursor: pointer; transition: opacity .15s, transform .1s;
+    letter-spacing: 0.2px;
+  }
+  .btn:active { transform: scale(0.97); opacity: 0.85; }
+  .btn:disabled { opacity: 0.4; cursor: default; }
+
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-danger  { background: #ef4444; color: #fff; }
+  .btn-ghost   { background: var(--surface); color: var(--text); border: 1.5px solid var(--border); }
+
+  /* ── Manual entry ── */
+  .row {
+    display: flex; gap: 8px;
+    width: 100%; max-width: 360px;
+  }
+  input {
+    flex: 1;
+    padding: 13px 14px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 15px;
+  }
+  input:focus { outline: none; border-color: var(--accent); }
+  input::placeholder { color: var(--muted); }
+
+  /* ── Walk-in form ── */
+  #walkinForm {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%; max-width: 360px;
+    background: var(--surface);
+    border: 1.5px solid var(--warn);
+    border-radius: 14px;
+    padding: 16px;
+  }
+  #walkinForm h2 { font-size: 15px; color: var(--warn); text-align: center; }
+
+  .divider {
+    width: 100%; max-width: 360px;
+    text-align: center; font-size: 12px;
+    color: var(--muted); border-top: 1px solid var(--border);
+    padding-top: 4px;
+  }
+</style>
 </head>
 <body>
 
-<div class="header">
-    <h1>🎫 QR Scanner</h1>
-    <p>Scan QR code to check-in</p>
+<h1>🎫 Event <span>Check-in</span></h1>
+
+<!-- Camera -->
+<div class="cam-wrap" id="camWrap">
+  <video id="video" playsinline autoplay muted></video>
+  <canvas id="overlay"></canvas>
+  <div class="cam-idle" id="camIdle">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <rect x="2" y="7" width="15" height="13" rx="2"/><path d="M17 9l3-2v10l-3-2"/>
+    </svg>
+    Camera off
+  </div>
+  <div class="frame" id="frameEl" style="display:none"><span></span></div>
+  <div class="scan-line" id="scanLine" style="display:none"></div>
 </div>
 
-<div class="scanner-box">
-    <video id="video" playsinline autoplay></video>
-    <div class="placeholder" id="placeholder">
-        <span class="icon">📷</span>
-        Camera Off
-    </div>
-    <div class="scan-overlay" id="scanOverlay">
-        <div class="scan-frame"></div>
-        <div class="scan-line"></div>
-    </div>
+<div id="toast">Ready to scan</div>
+
+<button class="btn btn-primary" id="startBtn" onclick="startCamera()">📷 Start Camera</button>
+<button class="btn btn-danger"  id="stopBtn"  onclick="stopCamera()" style="display:none">⏹ Stop Camera</button>
+
+<div class="divider">or enter ID manually</div>
+
+<div class="row">
+  <input id="manualId" type="text" placeholder="Guest ID (e.g. 1, 2, 3)" inputmode="numeric">
+  <button class="btn btn-ghost" style="width:auto;padding:13px 18px;flex-shrink:0" onclick="manualCheckin()">Go</button>
 </div>
 
-<div id="status">📱 Tap "Start Camera"</div>
-
-<div class="controls">
-    <button class="btn btn-start" id="startBtn" onclick="startCamera()">📷 Start Camera</button>
-    <button class="btn btn-stop" id="stopBtn" onclick="stopCamera()" disabled>⏹ Stop</button>
+<!-- Walk-in form -->
+<div id="walkinForm">
+  <h2>🆕 New Guest — Register Below</h2>
+  <input id="wiName"  type="text"  placeholder="Full Name *">
+  <input id="wiEmail" type="email" placeholder="Email *">
+  <input id="wiPhone" type="tel"   placeholder="Phone (optional)">
+  <button class="btn btn-primary" onclick="registerWalkin()">✅ Register & Check-in</button>
+  <button class="btn btn-ghost"   onclick="closeWalkin()">Cancel</button>
 </div>
 
-<div class="controls">
-    <button class="btn btn-scan" id="scanBtn" onclick="scanNow()" disabled>
-        📸 SCAN NOW
-    </button>
-</div>
 
-<div id="result" class="result-idle">📱 Ready to scan</div>
-
-<div id="walkin-form">
-    <h3>🆕 New Guest Registration</h3>
-    <form onsubmit="registerWalkin(event)">
-        <input type="text" id="name" placeholder="Full Name *" required>
-        <input type="email" id="email" placeholder="Email *" required>
-        <input type="tel" id="phone" placeholder="Phone Number">
-        <button type="submit" class="btn btn-start" style="width:100%;">✅ Register & Check-in</button>
-    </form>
-    <button onclick="closeWalkinForm()" style="width:100%; padding:12px; margin-top:10px; background:#333; color:white; border:none; border-radius:10px; cursor:pointer;">✕ Cancel</button>
-</div>
-
-<div class="manual-entry">
-    <input type="text" id="manualQR" placeholder="Enter ID manually (e.g. 1)">
-    <button onclick="manualCheckin()" class="btn btn-start btn-small">Check-in</button>
-</div>
-
-<!-- ========================================== -->
-<!-- QR SCANNER LIBRARY -->
-<!-- ========================================== -->
-<script src="https://cdn.jsdelivr.net/npm/instascan@1.0.0/instascan.min.js">
-</script>
-
+<!-- ============================================================
+     CONFIGURATION — paste your Google Apps Script URL below
+============================================================ -->
 <script>
-// ============================================
-// CONFIGURATION - UPDATE THIS!
-// ============================================
-const APP_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+const SHEET_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+// ──────────────────────────────────────────────────────────────
 
-// ============================================
-// VARIABLES
-// ============================================
-let scanner = null;
-let isCameraOn = false;
-let isScanning = false;
-let lastScanned = '';
+let stream = null;
+let animFrame = null;
+let lastCode = '';
+let lastCodeTime = 0;
+const COOLDOWN = 3000; // ms between same QR scans
 
-// ============================================
-// START CAMERA
-// ============================================
-function startCamera() {
-    const startBtn = document.getElementById('startBtn');
-    const stopBtn = document.getElementById('stopBtn');
-    const scanBtn = document.getElementById('scanBtn');
-    const status = document.getElementById('status');
-    const video = document.getElementById('video');
-    const placeholder = document.getElementById('placeholder');
-    const scanOverlay = document.getElementById('scanOverlay');
-    const result = document.getElementById('result');
-    
-    startBtn.disabled = true;
-    startBtn.textContent = '⏳ Loading...';
-    status.textContent = '🔍 Initializing camera...';
-    result.className = 'result-scanning';
-    result.textContent = '⏳ Starting camera...';
+const video   = document.getElementById('video');
+const overlay = document.getElementById('overlay');
+const ctx     = overlay.getContext('2d');
 
-    Instascan.Camera.getCameras()
-        .then(function(cameras) {
-            if (cameras.length === 0) {
-                throw new Error('No cameras found');
-            }
-            
-            let selectedCamera = cameras[0];
-            for (let cam of cameras) {
-                if (cam.name && cam.name.toLowerCase().includes('back')) {
-                    selectedCamera = cam;
-                    break;
-                }
-            }
-            
-            scanner = new Instascan.Scanner({
-                video: video,
-                mirror: false,
-                captureImage: false,
-                backgroundScan: false,
-                scanPeriod: 0.5
-            });
-            
-            scanner.addListener('scan', function(content) {
-                // Auto-scan when camera is on and scan button is pressed
-                if (isScanning && lastScanned !== content) {
-                    lastScanned = content;
-                    isScanning = false;
-                    scanBtn.textContent = '📸 SCAN NOW';
-                    scanBtn.style.background = 'linear-gradient(135deg, #48bb78, #38a169)';
-                    handleScan(content);
-                    setTimeout(() => { lastScanned = ''; }, 2000);
-                }
-            });
-            
-            return scanner.start(selectedCamera);
-        })
-        .then(function() {
-            isCameraOn = true;
-            video.style.display = 'block';
-            video.classList.add('active');
-            placeholder.style.display = 'none';
-            scanOverlay.classList.add('active');
-            
-            status.textContent = '✅ Camera ready - Tap SCAN NOW';
-            startBtn.textContent = '📷 Active';
-            startBtn.disabled = false;
-            stopBtn.disabled = false;
-            scanBtn.disabled = false;
-            result.className = 'result-idle';
-            result.textContent = '📱 Tap "SCAN NOW" to scan QR';
-            
-            document.getElementById('status').innerHTML = '✅ Camera ready <span class="badge badge-on">ON</span>';
-        })
-        .catch(function(err) {
-            status.textContent = '❌ ' + err.message;
-            startBtn.textContent = '📷 Start Camera';
-            startBtn.disabled = false;
-            result.className = 'result-error';
-            result.textContent = '❌ Camera error';
-            
-            alert('❌ Camera Error\n\n' + err.message + '\n\n' +
-                  'Please allow camera access in browser settings.');
-        });
+// ── Toast helper ──────────────────────────────────────────────
+function toast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = type;
 }
 
-// ============================================
-// STOP CAMERA
-// ============================================
-function stopCamera() {
-    if (scanner) {
-        try {
-            scanner.stop();
-        } catch(e) {}
-        scanner = null;
-    }
-    
-    const video = document.getElementById('video');
-    const placeholder = document.getElementById('placeholder');
-    const scanOverlay = document.getElementById('scanOverlay');
-    
-    video.style.display = 'none';
-    video.classList.remove('active');
-    placeholder.style.display = 'block';
-    scanOverlay.classList.remove('active');
-    
-    isCameraOn = false;
-    isScanning = false;
-    
-    document.getElementById('startBtn').textContent = '📷 Start Camera';
+// ── Start camera ──────────────────────────────────────────────
+async function startCamera() {
+  toast('Starting camera…', 'loading');
+  document.getElementById('startBtn').disabled = true;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 1280 } },
+      audio: false
+    });
+    video.srcObject = stream;
+    await video.play();
+
+    document.getElementById('camIdle').style.display = 'none';
+    document.getElementById('frameEl').style.display = '';
+    document.getElementById('scanLine').style.display = '';
+    document.getElementById('startBtn').style.display = 'none';
+    document.getElementById('stopBtn').style.display = '';
+
+    toast('Point camera at a QR code', 'loading');
+    tick();
+  } catch (e) {
+    toast('❌ Camera error: ' + e.message, 'error');
     document.getElementById('startBtn').disabled = false;
-    document.getElementById('stopBtn').disabled = true;
-    document.getElementById('scanBtn').disabled = true;
-    document.getElementById('scanBtn').textContent = '📸 SCAN NOW';
-    document.getElementById('status').innerHTML = '⏹ Camera stopped <span class="badge badge-off">OFF</span>';
-    document.getElementById('result').className = 'result-idle';
-    document.getElementById('result').textContent = '📱 Camera is off';
+    alert('Camera access denied.\n\nPlease allow camera in your browser settings, then reload.');
+  }
 }
 
-// ============================================
-// SCAN NOW - Capture QR
-// ============================================
-function scanNow() {
-    if (!isCameraOn) {
-        alert('Please start camera first!');
-        return;
-    }
-    
-    const scanBtn = document.getElementById('scanBtn');
-    const result = document.getElementById('result');
-    const status = document.getElementById('status');
-    
-    isScanning = true;
-    scanBtn.textContent = '⏳ Scanning...';
-    scanBtn.style.background = '#f6ad55';
-    result.className = 'result-scanning';
-    result.textContent = '🔍 Scanning... Point at QR code';
-    status.textContent = '🔍 Scanning for QR code...';
-    
-    // If no QR detected after 5 seconds, reset
-    setTimeout(() => {
-        if (isScanning) {
-            isScanning = false;
-            scanBtn.textContent = '📸 SCAN NOW';
-            scanBtn.style.background = 'linear-gradient(135deg, #48bb78, #38a169)';
-            result.className = 'result-idle';
-            result.textContent = '⏳ No QR detected. Try again.';
-            status.textContent = '⏳ No QR detected';
-        }
-    }, 5000);
+// ── Stop camera ───────────────────────────────────────────────
+function stopCamera() {
+  if (animFrame) cancelAnimationFrame(animFrame);
+  if (stream)    stream.getTracks().forEach(t => t.stop());
+  stream = null; animFrame = null;
+  video.srcObject = null;
+  ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+  document.getElementById('camIdle').style.display = '';
+  document.getElementById('frameEl').style.display = 'none';
+  document.getElementById('scanLine').style.display = 'none';
+  document.getElementById('startBtn').style.display = '';
+  document.getElementById('startBtn').disabled = false;
+  document.getElementById('stopBtn').style.display = 'none';
+  toast('Camera stopped');
 }
 
-// ============================================
-// HANDLE QR SCAN
-// ============================================
-function handleScan(guestID) {
-    const result = document.getElementById('result');
-    const status = document.getElementById('status');
-    
-    result.className = 'result-scanning';
-    result.textContent = '⏳ Processing...';
-    status.textContent = '🔍 Checking guest...';
+// ── QR decode loop ────────────────────────────────────────────
+function tick() {
+  if (!stream) return;
 
-    fetch(APP_SCRIPT_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            action: 'checkin',
-            id: guestID.trim()
-        })
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('HTTP Error: ' + response.status);
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.status === 'success') {
-            result.className = 'result-done';
-            result.textContent = '✅ ' + data.name + ' - CHECKED IN! 🎉';
-            status.textContent = '🎉 Welcome ' + data.name + '!';
-            playSound('success');
-            if (navigator.vibrate) navigator.vibrate(200);
+  overlay.width  = video.videoWidth  || 300;
+  overlay.height = video.videoHeight || 300;
 
-        } else if (data.status === 'walkin') {
-            result.className = 'result-walkin';
-            result.textContent = '🆕 New guest! Please register below.';
-            document.getElementById('walkin-form').style.display = 'block';
-            status.textContent = '📝 Fill the registration form';
-            playSound('walkin');
+  if (video.readyState === video.HAVE_ENOUGH_DATA && overlay.width > 0) {
+    ctx.drawImage(video, 0, 0, overlay.width, overlay.height);
+    const imgData = ctx.getImageData(0, 0, overlay.width, overlay.height);
+    const code = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'dontInvert' });
 
-        } else if (data.status === 'error') {
-            result.className = 'result-error';
-            result.textContent = '❌ ' + data.message;
-            status.textContent = '❌ Check-in failed';
-            playSound('error');
-
-        } else {
-            result.className = 'result-error';
-            result.textContent = '❌ Unknown error';
-        }
-    })
-    .catch(error => {
-        result.className = 'result-error';
-        result.textContent = '❌ Network error! Check URL';
-        status.textContent = '⚠️ Error: ' + error.message;
-        playSound('error');
-    });
-}
-
-// ============================================
-// MANUAL CHECK-IN
-// ============================================
-function manualCheckin() {
-    const id = document.getElementById('manualQR').value.trim();
-    if (id) {
-        handleScan(id);
-        document.getElementById('manualQR').value = '';
+    if (code) {
+      const now = Date.now();
+      if (code.data !== lastCode || now - lastCodeTime > COOLDOWN) {
+        lastCode = code.data;
+        lastCodeTime = now;
+        highlightQR(code.location);
+        handleCheckin(code.data.trim());
+      }
     } else {
-        alert('Please enter an ID (e.g., 1, 2, 3)');
+      ctx.clearRect(0, 0, overlay.width, overlay.height);
     }
+  }
+
+  animFrame = requestAnimationFrame(tick);
 }
 
-// ============================================
-// WALK-IN REGISTRATION
-// ============================================
-function registerWalkin(e) {
-    e.preventDefault();
+// Draw highlight box on found QR
+function highlightQR(loc) {
+  ctx.clearRect(0, 0, overlay.width, overlay.height);
+  ctx.strokeStyle = '#34d399';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(loc.topLeftCorner.x,     loc.topLeftCorner.y);
+  ctx.lineTo(loc.topRightCorner.x,    loc.topRightCorner.y);
+  ctx.lineTo(loc.bottomRightCorner.x, loc.bottomRightCorner.y);
+  ctx.lineTo(loc.bottomLeftCorner.x,  loc.bottomLeftCorner.y);
+  ctx.closePath();
+  ctx.stroke();
+}
 
-    const name = document.getElementById('name').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-
-    if (!name || !email) {
-        alert('Please fill in Name and Email');
-        return;
-    }
-
-    const result = document.getElementById('result');
-    result.className = 'result-scanning';
-    result.textContent = '⏳ Registering...';
-
-    fetch(APP_SCRIPT_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            action: 'register',
-            name: name,
-            email: email,
-            phone: phone
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            result.className = 'result-done';
-            result.textContent = '✅ ' + data.name + ' registered & checked in!';
-            document.getElementById('walkin-form').style.display = 'none';
-            document.getElementById('walkin-form').reset();
-            document.getElementById('status').textContent = '🎉 Welcome ' + data.name + '!';
-            playSound('success');
-        } else {
-            result.className = 'result-error';
-            result.textContent = '❌ Registration failed';
-        }
-    })
-    .catch(error => {
-        result.className = 'result-error';
-        result.textContent = '❌ Network error!';
+// ── Check-in via Apps Script ──────────────────────────────────
+async function handleCheckin(id) {
+  if (!id) return;
+  toast('⏳ Checking in…', 'loading');
+  try {
+    const res = await fetch(SHEET_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'checkin', id })
     });
-}
+    const data = await res.json();
 
-function closeWalkinForm() {
-    document.getElementById('walkin-form').style.display = 'none';
-    document.getElementById('walkin-form').reset();
-    document.getElementById('result').className = 'result-idle';
-    document.getElementById('result').textContent = '📱 Ready to scan';
-    document.getElementById('status').textContent = '✅ Ready';
-}
+    if (data.status === 'success') {
+      toast('✅ ' + data.name + ' — Checked In! 🎉', 'success');
+      beep('success');
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
 
-// ============================================
-// SOUND EFFECTS
-// ============================================
-function playSound(type) {
-    try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        gainNode.gain.value = 0.15;
-        
-        if (type === 'success') {
-            oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
-            oscillator.frequency.setValueAtTime(1100, audioCtx.currentTime + 0.1);
-            oscillator.start();
-            oscillator.stop(audioCtx.currentTime + 0.2);
-        } else if (type === 'error') {
-            oscillator.frequency.setValueAtTime(300, audioCtx.currentTime);
-            oscillator.start();
-            oscillator.stop(audioCtx.currentTime + 0.3);
-        } else if (type === 'walkin') {
-            oscillator.frequency.setValueAtTime(500, audioCtx.currentTime);
-            oscillator.frequency.setValueAtTime(700, audioCtx.currentTime + 0.1);
-            oscillator.start();
-            oscillator.stop(audioCtx.currentTime + 0.2);
-        }
-    } catch(e) {}
-}
+    } else if (data.status === 'walkin') {
+      toast('🆕 Not found — please register', 'warn');
+      document.getElementById('walkinForm').style.display = 'flex';
+      beep('warn');
 
-// ============================================
-// INITIALIZE
-// ============================================
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('📱 Scanner loaded');
-    console.log('🔗 API URL:', APP_SCRIPT_URL);
-    document.getElementById('status').innerHTML = '📱 Tap "Start Camera" <span class="badge badge-off">OFF</span>';
-});
-
-// ============================================
-// CLEANUP
-// ============================================
-window.addEventListener('beforeunload', function() {
-    if (scanner) {
-        try {
-            scanner.stop();
-        } catch(e) {}
+    } else {
+      toast('❌ ' + (data.message || 'Unknown error'), 'error');
+      beep('error');
     }
+  } catch (e) {
+    toast('❌ Network error — check URL', 'error');
+    console.error(e);
+  }
+}
+
+// ── Manual check-in ───────────────────────────────────────────
+function manualCheckin() {
+  const id = document.getElementById('manualId').value.trim();
+  if (!id) { toast('Enter a Guest ID first', 'error'); return; }
+  document.getElementById('manualId').value = '';
+  handleCheckin(id);
+}
+document.getElementById('manualId').addEventListener('keydown', e => {
+  if (e.key === 'Enter') manualCheckin();
 });
+
+// ── Walk-in registration ──────────────────────────────────────
+async function registerWalkin() {
+  const name  = document.getElementById('wiName').value.trim();
+  const email = document.getElementById('wiEmail').value.trim();
+  const phone = document.getElementById('wiPhone').value.trim();
+  if (!name || !email) { toast('Name and Email are required', 'error'); return; }
+
+  toast('⏳ Registering…', 'loading');
+  try {
+    const res = await fetch(SHEET_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'register', name, email, phone })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      toast('✅ ' + data.name + ' registered & checked in!', 'success');
+      closeWalkin();
+      beep('success');
+    } else {
+      toast('❌ Registration failed', 'error');
+    }
+  } catch (e) {
+    toast('❌ Network error', 'error');
+  }
+}
+
+function closeWalkin() {
+  document.getElementById('walkinForm').style.display = 'none';
+  ['wiName','wiEmail','wiPhone'].forEach(id => document.getElementById(id).value = '');
+}
+
+// ── Beep ──────────────────────────────────────────────────────
+function beep(type) {
+  try {
+    const ac = new AudioContext();
+    const osc = ac.createOscillator();
+    const g   = ac.createGain();
+    osc.connect(g); g.connect(ac.destination);
+    g.gain.value = 0.12;
+    if (type === 'success') {
+      osc.frequency.value = 880;
+      osc.start(); osc.stop(ac.currentTime + 0.15);
+    } else if (type === 'error') {
+      osc.frequency.value = 280;
+      osc.start(); osc.stop(ac.currentTime + 0.3);
+    } else {
+      osc.frequency.value = 600;
+      osc.start(); osc.stop(ac.currentTime + 0.15);
+    }
+  } catch(e) {}
+}
 </script>
+
+<!--
+=================================================================
+GOOGLE APPS SCRIPT (paste in Google Apps Script editor)
+=================================================================
+
+function doPost(e) {
+  const data = JSON.parse(e.postData.contents);
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Guests') || ss.getSheets()[0];
+
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const idCol    = headers.indexOf('ID') + 1;
+  const nameCol  = headers.indexOf('Name') + 1;
+  const checkedCol = headers.indexOf('Checked In') + 1;
+  const timeCol  = headers.indexOf('Check-in Time') + 1;
+
+  if (data.action === 'checkin') {
+    const rows = sheet.getDataRange().getValues();
+    for (let i = 1; i < rows.length; i++) {
+      if (String(rows[i][idCol - 1]).trim() === String(data.id).trim()) {
+        sheet.getRange(i + 1, checkedCol).setValue('YES');
+        sheet.getRange(i + 1, timeCol).setValue(new Date().toLocaleString());
+        return ContentService
+          .createTextOutput(JSON.stringify({ status: 'success', name: rows[i][nameCol - 1] }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: 'walkin' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (data.action === 'register') {
+    const lastRow = sheet.getLastRow() + 1;
+    const newId = lastRow - 1;
+    sheet.getRange(lastRow, idCol).setValue(newId);
+    sheet.getRange(lastRow, nameCol).setValue(data.name);
+    sheet.getRange(lastRow, headers.indexOf('Email') + 1).setValue(data.email);
+    sheet.getRange(lastRow, headers.indexOf('Phone') + 1).setValue(data.phone || '');
+    sheet.getRange(lastRow, checkedCol).setValue('YES');
+    sheet.getRange(lastRow, timeCol).setValue(new Date().toLocaleString());
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: 'success', name: data.name }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+Sheet column headers (Row 1):
+  ID | Name | Email | Phone | Checked In | Check-in Time
+
+Deploy as Web App:
+  Execute as: Me
+  Who has access: Anyone
+=================================================================
+-->
 
 </body>
 </html>
