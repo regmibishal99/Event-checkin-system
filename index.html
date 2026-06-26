@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Event Scanner</title>
     <style>
-        
         * {
             margin: 0;
             padding: 0;
@@ -340,6 +339,14 @@
             color: rgba(255,255,255,0.3);
         }
         
+        .count-badge {
+            background: rgba(102, 126, 234, 0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #667eea;
+        }
+        
         @media (max-width: 480px) {
             .header h1 { font-size: 20px; }
             .btn { padding: 12px 20px; font-size: 14px; min-width: 100px; }
@@ -374,7 +381,7 @@
     <button class="btn btn-danger" id="stopBtn" onclick="stopScanner()" disabled>⏹ Stop</button>
 </div>
 
-<div class="debug-info" id="debugInfo">🔍 Ready - Waiting for connection test...</div>
+<div class="debug-info" id="debugInfo">🔍 Ready</div>
 
 <div id="result" class="result-info">📱 Scan a QR code</div>
 
@@ -395,9 +402,9 @@
 </div>
 
 <!-- ========================================== -->
-<!-- QR SCANNER LIBRARY - jsQR -->
+<!-- QR SCANNER LIBRARY - Instascan (MORE RELIABLE) -->
 <!-- ========================================== -->
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js">
+<script src="https://cdn.jsdelivr.net/npm/instascan@1.0.0/instascan.min.js">
 </script>
 
 <script>
@@ -420,9 +427,8 @@ function debugLog(message) {
 // ============================================
 // VARIABLES
 // ============================================
-let stream = null;
+let scanner = null;
 let isScanning = false;
-let animationId = null;
 let lastScanned = '';
 let connectionTested = false;
 
@@ -438,23 +444,22 @@ function testConnection() {
             return response.json();
         })
         .then(data => {
-            debugLog('✅ Connection successful! ' + JSON.stringify(data));
+            debugLog('✅ Connection successful!');
             connectionTested = true;
             document.getElementById('result').className = 'result-success';
             document.getElementById('result').textContent = '✅ Connected to server! Ready to scan.';
-            document.getElementById('status-text').textContent = '✅ System ready - Start camera';
+            document.getElementById('status-text').textContent = '✅ System ready';
         })
         .catch(error => {
             debugLog('❌ Connection failed: ' + error.message);
             document.getElementById('result').className = 'result-error';
             document.getElementById('result').textContent = '❌ Cannot connect to server! Check URL';
             document.getElementById('status-text').textContent = '⚠️ Check your APP_SCRIPT_URL';
-            console.error('Connection error:', error);
         });
 }
 
 // ============================================
-// START SCANNER
+// START SCANNER - Using Instascan
 // ============================================
 function startScanner() {
     const startBtn = document.getElementById('startBtn');
@@ -477,124 +482,86 @@ function startScanner() {
         return;
     }
     
-    debugLog('Starting camera...');
+    debugLog('Starting camera with Instascan...');
     startBtn.disabled = true;
     startBtn.innerHTML = '<span class="loading"></span> Loading...';
-    statusText.textContent = '🔍 Requesting camera access...';
+    statusText.textContent = '🔍 Initializing camera...';
 
-    const constraints = {
-        video: {
-            facingMode: 'environment',
-            width: { ideal: 640 },
-            height: { ideal: 480 }
-        },
-        audio: false
-    };
-
-    navigator.mediaDevices.getUserMedia(constraints)
-        .then(function(mediaStream) {
-            debugLog('✅ Camera access granted');
-            stream = mediaStream;
+    // Get cameras
+    Instascan.Camera.getCameras()
+        .then(function(cameras) {
+            if (cameras.length === 0) {
+                throw new Error('No cameras found');
+            }
             
-            video.srcObject = mediaStream;
+            // Use back camera if available
+            let selectedCamera = cameras[0];
+            for (let cam of cameras) {
+                if (cam.name && cam.name.toLowerCase().includes('back')) {
+                    selectedCamera = cam;
+                    break;
+                }
+            }
+            
+            debugLog('Using camera: ' + selectedCamera.name);
+            
+            // Create scanner
+            scanner = new Instascan.Scanner({
+                video: video,
+                mirror: false,
+                captureImage: false,
+                backgroundScan: false,
+                scanPeriod: 1
+            });
+            
+            // Add scan listener
+            scanner.addListener('scan', function(content) {
+                if (lastScanned !== content) {
+                    lastScanned = content;
+                    debugLog('✅ QR Scanned: ' + content);
+                    handleScan(content);
+                    setTimeout(() => { lastScanned = ''; }, 2000);
+                }
+            });
+            
+            // Add error listener
+            scanner.addListener('error', function(err) {
+                debugLog('Scanner error: ' + err);
+            });
+            
+            // Start scanning
+            return scanner.start(selectedCamera);
+        })
+        .then(function() {
+            isScanning = true;
             video.style.display = 'block';
             video.classList.add('active');
             placeholderText.style.display = 'none';
             scanOverlay.classList.add('active');
             
-            video.play().then(() => {
-                isScanning = true;
-                statusText.textContent = '✅ Scanning... Point at QR code';
-                startBtn.innerHTML = '📷 Active';
-                startBtn.disabled = false;
-                document.getElementById('stopBtn').disabled = false;
-                startQRScanning();
-                debugLog('✅ Scanner active');
-            }).catch(function(err) {
-                debugLog('❌ Video play error: ' + err.message);
-                statusText.textContent = '❌ Error playing video';
-                startBtn.innerHTML = '📷 Start Camera';
-                startBtn.disabled = false;
-                stopScanner();
-            });
+            statusText.textContent = '✅ Scanning... Point at QR code';
+            startBtn.innerHTML = '📷 Active';
+            startBtn.disabled = false;
+            document.getElementById('stopBtn').disabled = false;
+            document.getElementById('result').className = 'result-info';
+            document.getElementById('result').textContent = '📱 Scanning for QR code...';
+            debugLog('✅ Scanner active');
         })
-        .catch(function(error) {
-            debugLog('❌ Camera error: ' + error.message);
-            let errorMsg = '';
-            if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-                errorMsg = 'Camera permission denied. Allow in browser settings.';
-            } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
-                errorMsg = 'No camera found on this device.';
-            } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
-                errorMsg = 'Camera is in use by another app.';
-            } else {
-                errorMsg = error.message;
-            }
-            statusText.textContent = '❌ ' + errorMsg;
+        .catch(function(err) {
+            debugLog('❌ Scanner error: ' + err.message);
+            statusText.textContent = '❌ ' + err.message;
             startBtn.innerHTML = '📷 Start Camera';
             startBtn.disabled = false;
             
-            alert('❌ Camera Error\n\n' + errorMsg + '\n\n' +
-                  '📱 To fix:\n' +
-                  '• iPhone: Settings → Safari → Camera → Allow\n' +
-                  '• Android: Settings → Apps → Chrome → Permissions → Camera → Allow\n\n' +
-                  'After changing settings, refresh and try again.');
-        });
-}
-
-// ============================================
-// QR SCANNING
-// ============================================
-function startQRScanning() {
-    const video = document.getElementById('video');
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d', { willReadFrequently: true });
-    
-    let scanning = true;
-    
-    function scanFrame() {
-        if (!scanning || !isScanning) return;
-        
-        try {
-            canvas.width = video.videoWidth || 640;
-            canvas.height = video.videoHeight || 480;
-            
-            if (canvas.width > 0 && canvas.height > 0) {
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                    inversionAttempts: "dontInvert",
-                });
-                
-                if (code && code.data) {
-                    const qrData = code.data.trim();
-                    if (lastScanned !== qrData) {
-                        lastScanned = qrData;
-                        debugLog('✅ QR Scanned: ' + qrData);
-                        handleScan(qrData);
-                        setTimeout(() => { lastScanned = ''; }, 2000);
-                    }
-                }
+            // Check if it's a camera permission issue
+            if (err.message && err.message.includes('permission')) {
+                alert('❌ Camera Permission Denied\n\n' +
+                      'Please allow camera access:\n' +
+                      '• iPhone: Settings → Safari → Camera → Allow\n' +
+                      '• Android: Settings → Apps → Chrome → Permissions → Camera → Allow\n\n' +
+                      'Then refresh and try again.');
             }
-        } catch (e) {
-            // Silent fail
-        }
-        
-        if (scanning && isScanning) {
-            animationId = requestAnimationFrame(scanFrame);
-        }
-    }
-    
-    scanning = true;
-    scanFrame();
-    
-    window.__cleanupScanner = function() {
-        scanning = false;
-        if (animationId) {
-            cancelAnimationFrame(animationId);
-            animationId = null;
-        }
-    };
+        });
 }
 
 // ============================================
@@ -605,25 +572,15 @@ function stopScanner() {
     const placeholderText = document.getElementById('placeholderText');
     const scanOverlay = document.getElementById('scanOverlay');
     
-    if (window.__cleanupScanner) {
-        window.__cleanupScanner();
+    if (scanner) {
+        try {
+            scanner.stop();
+        } catch(e) {}
+        scanner = null;
     }
     
-    if (stream) {
-        try {
-            stream.getTracks().forEach(track => track.stop());
-        } catch(e) {}
-        stream = null;
-    }
-    
-    if (video.srcObject) {
-        try {
-            video.srcObject = null;
-        } catch(e) {}
-    }
     video.style.display = 'none';
     video.classList.remove('active');
-    
     placeholderText.style.display = 'block';
     scanOverlay.classList.remove('active');
     
@@ -632,6 +589,8 @@ function stopScanner() {
     document.getElementById('startBtn').innerHTML = '📷 Start Camera';
     document.getElementById('startBtn').disabled = false;
     document.getElementById('stopBtn').disabled = true;
+    document.getElementById('result').className = 'result-info';
+    document.getElementById('result').textContent = '📱 Camera is off';
 }
 
 // ============================================
@@ -652,7 +611,7 @@ function handleScan(guestID) {
         },
         body: JSON.stringify({
             action: 'checkin',
-            id: guestID
+            id: guestID.trim()
         })
     })
     .then(response => {
@@ -800,7 +759,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('result').className = 'result-info';
     document.getElementById('result').textContent = '📱 Testing connection...';
     
-    // Test connection after 1 second
     setTimeout(testConnection, 1000);
     
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
