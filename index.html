@@ -189,6 +189,13 @@
             transform: none !important;
         }
         
+        .btn-small {
+            padding: 10px 20px;
+            font-size: 14px;
+            min-width: auto;
+            flex: 0 0 auto;
+        }
+        
         #result {
             width: 100%;
             max-width: 500px;
@@ -292,6 +299,46 @@
             to { transform: rotate(360deg); }
         }
         
+        .debug-info {
+            width: 100%;
+            max-width: 500px;
+            padding: 8px 15px;
+            margin: 5px 15px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.4);
+            text-align: center;
+            word-break: break-all;
+        }
+        
+        .manual-entry {
+            width: 100%;
+            max-width: 500px;
+            padding: 10px 15px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .manual-entry input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.05);
+            color: white;
+            font-size: 16px;
+        }
+        
+        .manual-entry input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .manual-entry input::placeholder {
+            color: rgba(255,255,255,0.3);
+        }
+        
         @media (max-width: 480px) {
             .header h1 { font-size: 20px; }
             .btn { padding: 12px 20px; font-size: 14px; min-width: 100px; }
@@ -326,6 +373,8 @@
     <button class="btn btn-danger" id="stopBtn" onclick="stopScanner()" disabled>⏹ Stop</button>
 </div>
 
+<div class="debug-info" id="debugInfo">🔍 Ready - Waiting for connection test...</div>
+
 <div id="result" class="result-info">📱 Scan a QR code</div>
 
 <div id="walkin-form">
@@ -339,17 +388,33 @@
     <button class="btn btn-secondary" onclick="closeWalkinForm()" style="width:100%; margin-top:10px;">✕ Cancel</button>
 </div>
 
+<div class="manual-entry">
+    <input type="text" id="manualQR" placeholder="Enter ID manually (e.g. 1)">
+    <button onclick="manualCheckin()" class="btn btn-primary btn-small">Check-in</button>
+</div>
+
 <!-- ========================================== -->
-<!-- QR SCANNER - Using jsQR (Most Reliable) -->
+<!-- QR SCANNER LIBRARY - jsQR -->
 <!-- ========================================== -->
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js">
 </script>
 
 <script>
 // ============================================
-// CONFIGURATION - CHANGE THIS!
+// CONFIGURATION - UPDATE THIS!
 // ============================================
-const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyRAk0lMbS_0MrJCrBSKDxot6WmVAmqmxN8VCNxcrNJvXNhTErFUUcGLVy1SM_aVnm6/exec';
+const APP_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+
+// ============================================
+// DEBUG HELPER
+// ============================================
+function debugLog(message) {
+    console.log('[DEBUG]', message);
+    const debugEl = document.getElementById('debugInfo');
+    if (debugEl) {
+        debugEl.textContent = '🔍 ' + message;
+    }
+}
 
 // ============================================
 // VARIABLES
@@ -358,10 +423,37 @@ let stream = null;
 let isScanning = false;
 let animationId = null;
 let lastScanned = '';
-let scanInterval = null;
+let connectionTested = false;
 
 // ============================================
-// START SCANNER - Direct Approach
+// TEST CONNECTION ON LOAD
+// ============================================
+function testConnection() {
+    debugLog('Testing connection to: ' + APP_SCRIPT_URL);
+    
+    fetch(APP_SCRIPT_URL + '?action=test')
+        .then(response => {
+            debugLog('Response status: ' + response.status);
+            return response.json();
+        })
+        .then(data => {
+            debugLog('✅ Connection successful! ' + JSON.stringify(data));
+            connectionTested = true;
+            document.getElementById('result').className = 'result-success';
+            document.getElementById('result').textContent = '✅ Connected to server! Ready to scan.';
+            document.getElementById('status-text').textContent = '✅ System ready - Start camera';
+        })
+        .catch(error => {
+            debugLog('❌ Connection failed: ' + error.message);
+            document.getElementById('result').className = 'result-error';
+            document.getElementById('result').textContent = '❌ Cannot connect to server! Check URL';
+            document.getElementById('status-text').textContent = '⚠️ Check your APP_SCRIPT_URL';
+            console.error('Connection error:', error);
+        });
+}
+
+// ============================================
+// START SCANNER
 // ============================================
 function startScanner() {
     const startBtn = document.getElementById('startBtn');
@@ -370,20 +462,25 @@ function startScanner() {
     const placeholderText = document.getElementById('placeholderText');
     const scanOverlay = document.getElementById('scanOverlay');
     
-    // If already scanning, stop first
     if (isScanning) {
         stopScanner();
         setTimeout(() => startScanner(), 500);
         return;
     }
     
+    if (!connectionTested) {
+        debugLog('Testing connection first...');
+        statusText.textContent = '🔍 Testing connection...';
+        testConnection();
+        setTimeout(() => startScanner(), 2000);
+        return;
+    }
+    
+    debugLog('Starting camera...');
     startBtn.disabled = true;
     startBtn.innerHTML = '<span class="loading"></span> Loading...';
     statusText.textContent = '🔍 Requesting camera access...';
-    document.getElementById('result').className = 'result-info';
-    document.getElementById('result').textContent = '⏳ Starting camera...';
 
-    // DIRECT CAMERA ACCESS - No library needed for this part
     const constraints = {
         video: {
             facingMode: 'environment',
@@ -395,70 +492,57 @@ function startScanner() {
 
     navigator.mediaDevices.getUserMedia(constraints)
         .then(function(mediaStream) {
-            // Save stream for later
+            debugLog('✅ Camera access granted');
             stream = mediaStream;
             
-            // Connect stream to video
             video.srcObject = mediaStream;
             video.style.display = 'block';
             video.classList.add('active');
             placeholderText.style.display = 'none';
             scanOverlay.classList.add('active');
             
-            // Play video
             video.play().then(() => {
                 isScanning = true;
-                statusText.textContent = '✅ Camera active - Scanning for QR...';
+                statusText.textContent = '✅ Scanning... Point at QR code';
                 startBtn.innerHTML = '📷 Active';
                 startBtn.disabled = false;
                 document.getElementById('stopBtn').disabled = false;
-                document.getElementById('result').className = 'result-info';
-                document.getElementById('result').textContent = '📱 Scanning for QR code...';
-                
-                // Start QR scanning
                 startQRScanning();
+                debugLog('✅ Scanner active');
             }).catch(function(err) {
-                console.error('Video play error:', err);
-                statusText.textContent = '❌ Error playing video: ' + err.message;
+                debugLog('❌ Video play error: ' + err.message);
+                statusText.textContent = '❌ Error playing video';
                 startBtn.innerHTML = '📷 Start Camera';
                 startBtn.disabled = false;
                 stopScanner();
             });
         })
         .catch(function(error) {
-            console.error('Camera error:', error);
-            
+            debugLog('❌ Camera error: ' + error.message);
             let errorMsg = '';
             if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-                errorMsg = 'Camera permission denied. Please allow camera access in your browser settings.';
+                errorMsg = 'Camera permission denied. Allow in browser settings.';
             } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
                 errorMsg = 'No camera found on this device.';
             } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
-                errorMsg = 'Camera is in use by another application.';
-            } else if (error.name === 'OverconstrainedError') {
-                errorMsg = 'Camera constraints cannot be satisfied.';
+                errorMsg = 'Camera is in use by another app.';
             } else {
                 errorMsg = error.message;
             }
-            
             statusText.textContent = '❌ ' + errorMsg;
             startBtn.innerHTML = '📷 Start Camera';
             startBtn.disabled = false;
-            document.getElementById('result').className = 'result-error';
-            document.getElementById('result').textContent = '❌ Camera error';
             
-            // Show detailed instructions
             alert('❌ Camera Error\n\n' + errorMsg + '\n\n' +
                   '📱 To fix:\n' +
                   '• iPhone: Settings → Safari → Camera → Allow\n' +
-                  '• Android: Settings → Apps → Chrome → Permissions → Camera → Allow\n' +
-                  '• Or use a different browser (Chrome or Safari)\n\n' +
+                  '• Android: Settings → Apps → Chrome → Permissions → Camera → Allow\n\n' +
                   'After changing settings, refresh and try again.');
         });
 }
 
 // ============================================
-// QR SCANNING USING jsQR
+// QR SCANNING
 // ============================================
 function startQRScanning() {
     const video = document.getElementById('video');
@@ -471,52 +555,38 @@ function startQRScanning() {
         if (!scanning || !isScanning) return;
         
         try {
-            // Set canvas size to match video
             canvas.width = video.videoWidth || 640;
             canvas.height = video.videoHeight || 480;
             
             if (canvas.width > 0 && canvas.height > 0) {
-                // Draw video frame to canvas
                 context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                
-                // Get image data
                 const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                
-                // Decode QR code using jsQR
                 const code = jsQR(imageData.data, imageData.width, imageData.height, {
                     inversionAttempts: "dontInvert",
                 });
                 
                 if (code && code.data) {
                     const qrData = code.data.trim();
-                    
-                    // Prevent duplicate scans
                     if (lastScanned !== qrData) {
                         lastScanned = qrData;
+                        debugLog('✅ QR Scanned: ' + qrData);
                         handleScan(qrData);
-                        
-                        // Reset after 2 seconds
-                        setTimeout(() => {
-                            lastScanned = '';
-                        }, 2000);
+                        setTimeout(() => { lastScanned = ''; }, 2000);
                     }
                 }
             }
         } catch (e) {
-            // Silent fail - continue scanning
+            // Silent fail
         }
         
-        // Request next frame
         if (scanning && isScanning) {
             animationId = requestAnimationFrame(scanFrame);
         }
     }
     
-    // Start scanning loop
     scanning = true;
     scanFrame();
     
-    // Store cleanup function
     window.__cleanupScanner = function() {
         scanning = false;
         if (animationId) {
@@ -534,12 +604,10 @@ function stopScanner() {
     const placeholderText = document.getElementById('placeholderText');
     const scanOverlay = document.getElementById('scanOverlay');
     
-    // Stop scanning loop
     if (window.__cleanupScanner) {
         window.__cleanupScanner();
     }
     
-    // Stop all tracks
     if (stream) {
         try {
             stream.getTracks().forEach(track => track.stop());
@@ -547,7 +615,6 @@ function stopScanner() {
         stream = null;
     }
     
-    // Reset video
     if (video.srcObject) {
         try {
             video.srcObject = null;
@@ -564,15 +631,13 @@ function stopScanner() {
     document.getElementById('startBtn').innerHTML = '📷 Start Camera';
     document.getElementById('startBtn').disabled = false;
     document.getElementById('stopBtn').disabled = true;
-    document.getElementById('result').className = 'result-info';
-    document.getElementById('result').textContent = '📱 Camera is off';
 }
 
 // ============================================
 // HANDLE QR SCAN
 // ============================================
 function handleScan(guestID) {
-    // Play sound
+    debugLog('Processing scan for ID: ' + guestID);
     playBeep(600, 100);
     
     document.getElementById('result').className = 'result-info';
@@ -590,12 +655,15 @@ function handleScan(guestID) {
         })
     })
     .then(response => {
+        debugLog('Response status: ' + response.status);
         if (!response.ok) {
-            throw new Error('Network error: ' + response.status);
+            throw new Error('HTTP Error: ' + response.status);
         }
         return response.json();
     })
     .then(data => {
+        debugLog('Response: ' + JSON.stringify(data));
+        
         if (data.status === 'success') {
             document.getElementById('result').className = 'result-success';
             document.getElementById('result').textContent = '✅ ' + data.name + ' checked in!';
@@ -620,15 +688,30 @@ function handleScan(guestID) {
 
         } else {
             document.getElementById('result').className = 'result-error';
-            document.getElementById('result').textContent = '❌ Unknown error';
+            document.getElementById('result').textContent = '❌ Unknown response';
         }
     })
     .catch(error => {
-        console.error('Fetch error:', error);
+        debugLog('❌ Fetch error: ' + error.message);
         document.getElementById('result').className = 'result-error';
         document.getElementById('result').textContent = '❌ Network error! Check URL';
         document.getElementById('status-text').textContent = '⚠️ Error: ' + error.message;
+        playBeep(300, 500);
     });
+}
+
+// ============================================
+// MANUAL CHECK-IN
+// ============================================
+function manualCheckin() {
+    const id = document.getElementById('manualQR').value.trim();
+    if (id) {
+        debugLog('Manual check-in for ID: ' + id);
+        handleScan(id);
+        document.getElementById('manualQR').value = '';
+    } else {
+        alert('Please enter an ID (e.g., 1, 2, 3)');
+    }
 }
 
 // ============================================
@@ -665,7 +748,7 @@ function registerWalkin(e) {
     .then(data => {
         if (data.status === 'success') {
             document.getElementById('result').className = 'result-success';
-            document.getElementById('result').textContent = '✅ ' + data.name + ' registered!';
+            document.getElementById('result').textContent = '✅ ' + data.name + ' registered & checked in!';
             document.getElementById('walkin-form').style.display = 'none';
             document.getElementById('walkin-form').reset();
             document.getElementById('status-text').textContent = '🎉 Welcome ' + data.name + '!';
@@ -673,7 +756,7 @@ function registerWalkin(e) {
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
         } else {
             document.getElementById('result').className = 'result-error';
-            document.getElementById('result').textContent = '❌ Registration failed';
+            document.getElementById('result').textContent = '❌ Registration failed: ' + (data.message || 'Error');
         }
     })
     .catch(error => {
@@ -698,25 +781,27 @@ function playBeep(freq, duration) {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const oscillator = audioCtx.createOscillator();
         const gainNode = audioCtx.createGain();
-        
         oscillator.connect(gainNode);
         gainNode.connect(audioCtx.destination);
-        
         oscillator.frequency.value = freq;
         oscillator.type = 'sine';
         gainNode.gain.value = 0.15;
-        
         oscillator.start();
         oscillator.stop(audioCtx.currentTime + duration / 1000);
-    } catch(e) {
-        // Silent fallback
-    }
+    } catch(e) {}
 }
 
 // ============================================
-// AUTO-START (Check if camera works)
+// INITIALIZE
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
+    debugLog('Page loaded.');
+    document.getElementById('result').className = 'result-info';
+    document.getElementById('result').textContent = '📱 Testing connection...';
+    
+    // Test connection after 1 second
+    setTimeout(testConnection, 1000);
+    
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     if (isMobile) {
         document.getElementById('status-text').textContent = '📱 Tap "Start Camera" to begin';
@@ -727,10 +812,19 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================
-// HANDLE PAGE UNLOAD
+// CLEANUP
 // ============================================
 window.addEventListener('beforeunload', function() {
     stopScanner();
+});
+
+// ============================================
+// KEYBOARD SHORTCUT
+// ============================================
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && document.getElementById('manualQR').value) {
+        manualCheckin();
+    }
 });
 </script>
 
