@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Event Scanner - Mobile</title>
+    <title>Event Scanner</title>
     <style>
         * {
             margin: 0;
@@ -21,17 +21,15 @@
             align-items: center;
             padding: 0;
             margin: 0;
-            overflow: hidden;
         }
         
-        /* Header */
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             width: 100%;
             padding: 20px;
             text-align: center;
-            z-index: 10;
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 10;
         }
         
         .header h1 {
@@ -46,7 +44,6 @@
             margin-top: 5px;
         }
         
-        /* Video Container */
         .scanner-container {
             position: relative;
             width: 100%;
@@ -64,10 +61,13 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            display: none;
+        }
+        
+        #video.active {
             display: block;
         }
         
-        /* Scanner Overlay */
         .scan-overlay {
             position: absolute;
             top: 0;
@@ -107,7 +107,6 @@
             100% { transform: translate(-50%, -60%); }
         }
         
-        /* Controls */
         .controls {
             display: flex;
             gap: 15px;
@@ -143,7 +142,6 @@
         
         .btn-primary:hover {
             transform: scale(1.05);
-            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
         }
         
         .btn-danger {
@@ -152,14 +150,16 @@
             box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
         }
         
-        .btn-danger:hover {
-            transform: scale(1.05);
-        }
-        
         .btn-success {
             background: linear-gradient(135deg, #4facfe, #00f2fe);
             color: white;
             box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
         }
         
         .btn:disabled {
@@ -168,7 +168,6 @@
             transform: none !important;
         }
         
-        /* Result Box */
         #result {
             width: 100%;
             max-width: 500px;
@@ -210,7 +209,6 @@
             border: 1px solid rgba(251, 191, 36, 0.3);
         }
         
-        /* Walk-in Form */
         #walkin-form {
             display: none;
             width: 100%;
@@ -250,22 +248,6 @@
             color: rgba(255,255,255,0.5);
         }
         
-        #walkin-form .btn {
-            width: 100%;
-            margin-top: 10px;
-        }
-        
-        .btn-cancel {
-            background: rgba(255,255,255,0.1);
-            color: white;
-            margin-top: 5px;
-        }
-        
-        .btn-cancel:hover {
-            background: rgba(255,255,255,0.2);
-        }
-        
-        /* Status */
         #status-text {
             font-size: 14px;
             color: rgba(255,255,255,0.6);
@@ -273,160 +255,185 @@
             text-align: center;
         }
         
-        /* Mobile Optimizations */
+        .placeholder-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255,255,255,0.3);
+            font-size: 18px;
+            text-align: center;
+            pointer-events: none;
+        }
+        
         @media (max-width: 480px) {
             .header h1 { font-size: 20px; }
             .btn { padding: 12px 20px; font-size: 14px; min-width: 100px; }
             #result { font-size: 14px; padding: 12px 15px; }
         }
-        
-        @media (orientation: landscape) and (max-height: 500px) {
-            .scanner-container { max-height: 50vh; aspect-ratio: auto; }
-            .header { padding: 10px; }
-            .header h1 { font-size: 18px; }
-        }
     </style>
 </head>
 <body>
 
-<!-- Header -->
 <div class="header">
     <h1>🎫 Event Scanner</h1>
     <p>Scan QR code to check-in</p>
 </div>
 
-<!-- Scanner -->
 <div class="scanner-container">
-    <video id="video" playsinline autoplay></video>
-    <div class="scan-overlay">
+    <video id="video" playsinline></video>
+    <div class="scan-overlay" id="scanOverlay" style="display:none;">
         <div class="scan-frame"></div>
         <div class="scan-line"></div>
     </div>
+    <div class="placeholder-text" id="placeholderText">
+        📷<br>Camera Off
+    </div>
 </div>
 
-<!-- Status -->
-<div id="status-text">📷 Tap "Start Camera" to begin</div>
+<div id="status-text">📱 Tap "Start Camera" to begin</div>
 
-<!-- Controls -->
 <div class="controls">
     <button class="btn btn-primary" id="startBtn" onclick="startScanner()">📷 Start Camera</button>
     <button class="btn btn-danger" id="stopBtn" onclick="stopScanner()" disabled>⏹ Stop</button>
 </div>
 
-<!-- Result -->
 <div id="result" class="result-info">📱 Scan a QR code</div>
 
-<!-- Walk-in Form -->
 <div id="walkin-form">
     <h3>🆕 New Guest Registration</h3>
     <form onsubmit="registerWalkin(event)">
         <input type="text" id="name" placeholder="Full Name *" required>
         <input type="email" id="email" placeholder="Email *" required>
         <input type="tel" id="phone" placeholder="Phone Number">
-        <button type="submit" class="btn btn-success">✅ Register & Check-in</button>
+        <button type="submit" class="btn btn-success" style="width:100%;">✅ Register & Check-in</button>
     </form>
-    <button class="btn btn-cancel" onclick="closeWalkinForm()">✕ Cancel</button>
+    <button class="btn btn-secondary" onclick="closeWalkinForm()" style="width:100%; margin-top:10px;">✕ Cancel</button>
 </div>
 
 <!-- ========================================== -->
-<!-- QR SCANNER LIBRARY (Mobile Optimized) -->
+<!-- QR SCANNER LIBRARY (Simpler & More Reliable) -->
 <!-- ========================================== -->
-<script src="https://unpkg.com/@zxing/browser@0.0.7/umd/index.min.js">
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js">
+</script>
+<script src="https://cdn.jsdelivr.net/npm/instascan@1.0.0/instascan.min.js">
 </script>
 
 <script>
 // ============================================
-!
+// CONFIGURATION - CHANGE THIS!
 // ============================================
-const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyRAk0lMbS_0MrJCrBSKDxot6WmVAmqmxN8VCNxcrNJvXNhTErFUUcGLVy1SM_aVnm6/exec';
+const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyRAk0lMbS_0MrJCrBSKDxot6WmVAmqmxN8VCNxcrNJvXNhTErFUUcGLVy1SM_aVnm6/exec
+';
 
 // ============================================
 // VARIABLES
 // ============================================
 let scanner = null;
 let isScanning = false;
-let scanTimeout = null;
+let lastScanned = '';
 
 // ============================================
 // START SCANNER (Mobile Optimized)
 // ============================================
-async function startScanner() {
-    try {
-        // Check if camera is supported
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            alert('❌ Camera not supported on this device/browser');
-            return;
-        }
+function startScanner() {
+    const startBtn = document.getElementById('startBtn');
+    const statusText = document.getElementById('status-text');
+    const video = document.getElementById('video');
+    const placeholderText = document.getElementById('placeholderText');
+    const scanOverlay = document.getElementById('scanOverlay');
+    
+    // Check if already scanning
+    if (isScanning) return;
+    
+    startBtn.disabled = true;
+    startBtn.textContent = '⏳ Loading...';
+    statusText.textContent = '🔍 Initializing camera...';
 
-        document.getElementById('status-text').textContent = '🔍 Requesting camera...';
-        document.getElementById('startBtn').disabled = true;
-        document.getElementById('startBtn').textContent = '⏳ Loading...';
-
-        // Get video element
-        const video = document.getElementById('video');
-
-        // Request camera with mobile-friendly settings
-        const stream = await navigator.mediaDevices.getUserMedia({
+    // Request camera with simple approach
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({
             video: {
                 facingMode: 'environment',
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-                aspectRatio: { ideal: 1.0 }
-            },
-            audio: false
-        });
-
-        // Set video source
-        video.srcObject = stream;
-        await video.play();
-
-        // Create QR scanner
-        const codeReader = new ZXing.BrowserMultiFormatReader();
-        scanner = codeReader;
-
-        // Start decoding
-        codeReader.decodeFromVideoElement(video, (result, err) => {
-            if (result) {
-                // QR Code detected!
-                const qrData = result.getText();
-                console.log('QR Scanned:', qrData);
-                handleScan(qrData);
-                
-                // Stop scanning after successful scan (prevents multiple scans)
-                if (scanTimeout) {
-                    clearTimeout(scanTimeout);
-                }
-                scanTimeout = setTimeout(() => {
-                    // Resume scanning after 3 seconds
-                }, 3000);
+                width: { ideal: 640 },
+                height: { ideal: 480 }
             }
+        })
+        .then(function(stream) {
+            // Show video
+            video.srcObject = stream;
+            video.style.display = 'block';
+            video.classList.add('active');
+            placeholderText.style.display = 'none';
+            scanOverlay.style.display = 'block';
+            
+            // Start Instascan
+            const scannerInstance = new Instascan.Scanner({
+                video: video,
+                mirror: false,
+                captureImage: false,
+                backgroundScan: false,
+                scanPeriod: 1
+            });
+            
+            scanner = scannerInstance;
+            
+            scanner.addListener('scan', function(content) {
+                // Prevent duplicate scans
+                if (lastScanned === content) return;
+                lastScanned = content;
+                handleScan(content);
+                
+                // Reset after 2 seconds
+                setTimeout(function() {
+                    lastScanned = '';
+                }, 2000);
+            });
+            
+            scanner.start()
+                .then(function() {
+                    isScanning = true;
+                    statusText.textContent = '✅ Scanning... Point at QR code';
+                    startBtn.textContent = '📷 Active';
+                    startBtn.disabled = false;
+                    document.getElementById('stopBtn').disabled = false;
+                    document.getElementById('result').className = 'result-info';
+                    document.getElementById('result').textContent = '📱 Scanning for QR code...';
+                })
+                .catch(function(err) {
+                    console.error('Scanner start error:', err);
+                    statusText.textContent = '❌ Scanner error: ' + err.message;
+                    startBtn.textContent = '📷 Start Camera';
+                    startBtn.disabled = false;
+                    stopScanner();
+                });
+        })
+        .catch(function(error) {
+            console.error('Camera error:', error);
+            
+            let errorMsg = 'Camera error: ';
+            if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                errorMsg += 'Please allow camera access in browser settings.';
+            } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+                errorMsg += 'No camera found on this device.';
+            } else {
+                errorMsg += error.message;
+            }
+            
+            statusText.textContent = '❌ ' + errorMsg;
+            startBtn.textContent = '📷 Start Camera';
+            startBtn.disabled = false;
+            
+            // Show alert with instructions
+            alert('❌ ' + errorMsg + '\n\n' +
+                  'On iPhone: Settings → Safari → Camera → Allow\n' +
+                  'On Android: Settings → Apps → Chrome → Permissions → Camera → Allow');
         });
-
-        isScanning = true;
-        document.getElementById('status-text').textContent = '✅ Scanning... Point at QR code';
-        document.getElementById('startBtn').textContent = '📷 Camera Active';
-        document.getElementById('stopBtn').disabled = false;
-        document.getElementById('result').className = 'result-info';
-        document.getElementById('result').textContent = '📱 Scanning for QR code...';
-
-    } catch (error) {
-        console.error('Scanner error:', error);
-        document.getElementById('status-text').textContent = '❌ Camera error: ' + error.message;
-        document.getElementById('startBtn').disabled = false;
-        document.getElementById('startBtn').textContent = '📷 Start Camera';
-        
-        // Show helpful message
-        let errorMsg = '❌ Camera error: ';
-        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-            errorMsg += 'Camera permission denied. Please allow camera access.';
-        } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
-            errorMsg += 'No camera found on this device.';
-        } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
-            errorMsg += 'Camera is in use by another app.';
-        } else {
-            errorMsg += error.message;
-        }
-        alert(errorMsg);
+    } else {
+        statusText.textContent = '❌ Camera not supported on this browser';
+        startBtn.textContent = '📷 Start Camera';
+        startBtn.disabled = false;
+        alert('Your browser does not support camera access. Please use Chrome or Safari.');
     }
 }
 
@@ -434,25 +441,33 @@ async function startScanner() {
 // STOP SCANNER
 // ============================================
 function stopScanner() {
+    const video = document.getElementById('video');
+    const placeholderText = document.getElementById('placeholderText');
+    const scanOverlay = document.getElementById('scanOverlay');
+    
     if (scanner) {
         try {
-            scanner.reset();
+            scanner.stop();
         } catch(e) {}
         scanner = null;
     }
-
-    const video = document.getElementById('video');
+    
     if (video.srcObject) {
         try {
             video.srcObject.getTracks().forEach(track => track.stop());
         } catch(e) {}
         video.srcObject = null;
     }
-
+    
+    video.style.display = 'none';
+    video.classList.remove('active');
+    placeholderText.style.display = 'block';
+    scanOverlay.style.display = 'none';
+    
     isScanning = false;
     document.getElementById('status-text').textContent = '⏹ Camera stopped';
-    document.getElementById('startBtn').disabled = false;
     document.getElementById('startBtn').textContent = '📷 Start Camera';
+    document.getElementById('startBtn').disabled = false;
     document.getElementById('stopBtn').disabled = true;
     document.getElementById('result').className = 'result-info';
     document.getElementById('result').textContent = '📱 Camera is off';
@@ -462,16 +477,15 @@ function stopScanner() {
 // HANDLE QR SCAN
 // ============================================
 function handleScan(guestID) {
-    // Clean the ID
     guestID = guestID.trim();
     
-    // Play sound
+    // Play sound effect
     playBeep(600, 100);
-
+    
     document.getElementById('result').className = 'result-info';
     document.getElementById('result').textContent = '⏳ Checking guest...';
+    document.getElementById('status-text').textContent = '🔍 Processing...';
 
-    // Send to Google Sheets
     fetch(APP_SCRIPT_URL, {
         method: 'POST',
         headers: {
@@ -484,33 +498,30 @@ function handleScan(guestID) {
     })
     .then(response => {
         if (!response.ok) {
-            throw new Error('Network response was not ok: ' + response.status);
+            throw new Error('Network response was not ok');
         }
         return response.json();
     })
     .then(data => {
         if (data.status === 'success') {
-            // ✅ Check-in successful
             document.getElementById('result').className = 'result-success';
             document.getElementById('result').textContent = '✅ ' + data.name + ' checked in!';
-            playBeep(880, 200);
             document.getElementById('status-text').textContent = '🎉 Check-in successful!';
-            
-            // Vibrate on mobile
+            playBeep(880, 200);
             if (navigator.vibrate) navigator.vibrate(200);
 
         } else if (data.status === 'walkin') {
-            // 🆕 Walk-in
             document.getElementById('result').className = 'result-walkin';
             document.getElementById('result').textContent = '🆕 New guest! Please register below.';
             document.getElementById('walkin-form').style.display = 'block';
+            document.getElementById('status-text').textContent = '📝 Please fill the registration form';
             playBeep(500, 300);
             if (navigator.vibrate) navigator.vibrate([100, 100, 100]);
 
         } else if (data.status === 'error') {
-            // ❌ Error
             document.getElementById('result').className = 'result-error';
             document.getElementById('result').textContent = data.message || '❌ Error!';
+            document.getElementById('status-text').textContent = '❌ Check-in failed';
             playBeep(300, 400);
             if (navigator.vibrate) navigator.vibrate(500);
 
@@ -522,7 +533,7 @@ function handleScan(guestID) {
     .catch(error => {
         console.error('Fetch error:', error);
         document.getElementById('result').className = 'result-error';
-        document.getElementById('result').textContent = '❌ Network error! Check URL.';
+        document.getElementById('result').textContent = '❌ Network error!';
         document.getElementById('status-text').textContent = '⚠️ Error: ' + error.message;
     });
 }
@@ -564,6 +575,7 @@ function registerWalkin(e) {
             document.getElementById('result').textContent = '✅ ' + data.name + ' registered & checked in!';
             document.getElementById('walkin-form').style.display = 'none';
             document.getElementById('walkin-form').reset();
+            document.getElementById('status-text').textContent = '🎉 Welcome ' + data.name + '!';
             playBeep(880, 300);
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
         } else {
@@ -586,7 +598,7 @@ function closeWalkinForm() {
 }
 
 // ============================================
-// BEEP SOUND (Works on Mobile)
+// BEEP SOUND
 // ============================================
 function playBeep(freq, duration) {
     try {
@@ -612,32 +624,23 @@ function playBeep(freq, duration) {
 // AUTO-START ON MOBILE (User Gesture Required)
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
-    // Show start button prominently on mobile
-    document.getElementById('status-text').textContent = '📱 Tap "Start Camera" to begin';
-    
-    // Check if running on mobile
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     if (isMobile) {
-        document.getElementById('status-text').textContent = '📱 Tap "Start Camera" to begin scanning';
+        document.getElementById('status-text').textContent = '📱 Tap "Start Camera" to begin';
     }
+    
+    console.log('📱 Event Scanner loaded!');
+    console.log('🔗 API URL:', APP_SCRIPT_URL);
 });
 
 // ============================================
-// HANDLE PAGE VISIBILITY (Optimize Performance)
+// HANDLE PAGE VISIBILITY
 // ============================================
 document.addEventListener('visibilitychange', function() {
     if (document.hidden && isScanning) {
-        // Pause scanning when tab is hidden
-        if (scanner) {
-            try {
-                scanner.reset();
-            } catch(e) {}
-        }
+        // Don't stop scanner, just pause
     }
 });
-
-console.log('📱 Event Scanner loaded successfully!');
-console.log('🔗 API URL:', APP_SCRIPT_URL);
 </script>
 
 </body>
