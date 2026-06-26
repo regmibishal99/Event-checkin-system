@@ -199,7 +199,7 @@
     <p class="subtitle">Scan QR code to check-in guests</p>
     
     <div id="video-container">
-        <video id="video" playsinline></video>
+        <div id="qr-reader"></div>
     </div>
     
     <div>
@@ -216,7 +216,7 @@
     <!-- Walk-in Registration Form -->
     <div id="walkin-form">
         <h3>🆕 New Guest Registration</h3>
-        <form onsubmit="registerWalkin(event)">
+        <form id="walkin-form-form" onsubmit="registerWalkin(event)">
             <input type="text" id="name" placeholder="Full Name *" required>
             <input type="email" id="email" placeholder="Email *" required>
             <input type="tel" id="phone" placeholder="Phone Number">
@@ -239,7 +239,7 @@
 </div>
 
 <!-- QR Scanner Library -->
-<script src="https://cdn.jsdelivr.net/npm/instascan@1.0.0/instascan.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.7/minified/html5-qrcode.min.js"></script>
 
 <script>
 // ============================================
@@ -253,56 +253,58 @@ const APP_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
 // ============================================
 let scanner = null;
 let isScanning = false;
+let lastScanTime = 0;
 
 function startScanner() {
     if (isScanning) return;
-    
+
     document.getElementById('scan-status').textContent = '🔍 Initializing camera...';
-    
-    Instascan.Camera.getCameras()
-        .then(cameras => {
-            if (cameras.length === 0) {
-                throw new Error('No cameras found');
+    document.getElementById('result').className = 'info';
+    document.getElementById('result').textContent = '📱 Requesting camera permission...';
+
+    scanner = new Html5Qrcode('qr-reader');
+    const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+        experimentalFeatures: { useBarCodeDetectorIfSupported: true }
+    };
+
+    scanner.start(
+        { facingMode: { exact: 'environment' } },
+        config,
+        qrCodeMessage => {
+            const now = Date.now();
+            if (now - lastScanTime < 1500) {
+                return;
             }
-            
-            // Use rear camera if available, otherwise first camera
-            const selectedCamera = cameras.find(cam => cam.name.toLowerCase().includes('back')) || cameras[0];
-            
-            scanner = new Instascan.Scanner({
-                video: document.getElementById('video'),
-                mirror: false,
-                captureImage: false,
-                backgroundScan: false
-            });
-            
-            scanner.addListener('scan', function(content) {
-                // content = the QR code data (should be the ID)
-                handleScan(content);
-            });
-            
-            scanner.start(selectedCamera);
-            isScanning = true;
-            document.getElementById('scan-status').textContent = '✅ Camera active - Scan a QR code';
-            document.getElementById('result').className = 'info';
-            document.getElementById('result').textContent = '📱 Scanning...';
-            
-            // Hide walk-in form
-            document.getElementById('walkin-form').style.display = 'none';
-            
-        })
-        .catch(err => {
-            alert('Camera error: ' + err.message);
-            document.getElementById('scan-status').textContent = '❌ Camera error: ' + err.message;
-        });
+            lastScanTime = now;
+            handleScan(qrCodeMessage);
+        },
+        errorMessage => {
+            console.debug('Scan error:', errorMessage);
+        }
+    ).then(() => {
+        isScanning = true;
+        document.getElementById('scan-status').textContent = '✅ Camera active - Scan a QR code';
+        document.getElementById('result').className = 'info';
+        document.getElementById('result').textContent = '📱 Scanning...';
+        document.getElementById('walkin-form').style.display = 'none';
+    }).catch(err => {
+        alert('Camera error: ' + err.message);
+        document.getElementById('scan-status').textContent = '❌ Camera error: ' + err.message;
+    });
 }
 
 function stopScanner() {
-    if (scanner) {
-        scanner.stop();
-        isScanning = false;
-        document.getElementById('scan-status').textContent = '⏹ Camera stopped';
-        document.getElementById('result').className = 'info';
-        document.getElementById('result').textContent = '📱 Camera is off';
+    if (scanner && isScanning) {
+        scanner.stop().then(() => scanner.clear()).catch(() => {}).finally(() => {
+            isScanning = false;
+            scanner = null;
+            document.getElementById('scan-status').textContent = '⏹ Camera stopped';
+            document.getElementById('result').className = 'info';
+            document.getElementById('result').textContent = '📱 Camera is off';
+        });
     }
 }
 
@@ -399,7 +401,7 @@ function registerWalkin(e) {
             document.getElementById('result').className = 'success';
             document.getElementById('result').textContent = '✅ ' + data.name + ' registered & checked in!';
             document.getElementById('walkin-form').style.display = 'none';
-            document.getElementById('walkin-form').reset();
+            document.getElementById('walkin-form-form').reset();
             playSound('success');
             updateStats();
         } else {
@@ -415,7 +417,7 @@ function registerWalkin(e) {
 
 function closeWalkinForm() {
     document.getElementById('walkin-form').style.display = 'none';
-    document.getElementById('walkin-form').reset();
+    document.getElementById('walkin-form-form').reset();
     document.getElementById('result').className = 'info';
     document.getElementById('result').textContent = '📱 Scan a QR code';
 }
