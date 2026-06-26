@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Event Scanner</title>
+    <title>QR Scanner</title>
     <style>
         * {
             margin: 0;
@@ -12,49 +12,42 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            font-family: Arial, sans-serif;
             background: #0a0a0a;
             color: white;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 0;
-            margin: 0;
+            padding: 20px;
         }
         
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            width: 100%;
-            padding: 20px;
             text-align: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            z-index: 10;
+            margin-bottom: 20px;
         }
         
         .header h1 {
-            font-size: 24px;
-            font-weight: 700;
-            letter-spacing: 1px;
+            font-size: 28px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         
         .header p {
+            color: #888;
             font-size: 14px;
-            opacity: 0.9;
-            margin-top: 5px;
         }
         
-        .scanner-container {
-            position: relative;
+        .scanner-box {
             width: 100%;
-            max-width: 500px;
+            max-width: 400px;
             aspect-ratio: 1/1;
             background: #1a1a1a;
-            margin: 10px auto;
             border-radius: 20px;
             overflow: hidden;
             border: 3px solid #667eea;
-            box-shadow: 0 0 40px rgba(102, 126, 234, 0.3);
+            position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -71,18 +64,16 @@
             display: block;
         }
         
-        .placeholder-text {
-            color: rgba(255,255,255,0.3);
-            font-size: 20px;
+        .placeholder {
+            color: #555;
             text-align: center;
-            pointer-events: none;
-            padding: 20px;
+            font-size: 18px;
         }
         
-        .placeholder-text .icon {
+        .placeholder .icon {
             font-size: 60px;
             display: block;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
         
         .scan-overlay {
@@ -106,8 +97,8 @@
             transform: translate(-50%, -50%);
             width: 70%;
             height: 70%;
-            border: 3px solid rgba(102, 126, 234, 0.8);
-            border-radius: 20px;
+            border: 2px solid rgba(102, 126, 234, 0.8);
+            border-radius: 15px;
             box-shadow: 0 0 0 4000px rgba(0,0,0,0.5);
         }
         
@@ -117,10 +108,9 @@
             left: 50%;
             transform: translate(-50%, -50%);
             width: 60%;
-            height: 3px;
+            height: 2px;
             background: linear-gradient(90deg, transparent, #667eea, transparent);
             animation: scan 2s infinite;
-            border-radius: 2px;
         }
         
         @keyframes scan {
@@ -130,202 +120,120 @@
         }
         
         .controls {
+            margin: 20px 0;
             display: flex;
-            gap: 15px;
-            padding: 15px;
-            width: 100%;
-            max-width: 500px;
-            justify-content: center;
+            gap: 10px;
             flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            max-width: 400px;
         }
         
         .btn {
-            padding: 14px 30px;
+            padding: 15px 30px;
             border: none;
             border-radius: 50px;
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 18px;
+            font-weight: bold;
             cursor: pointer;
             transition: all 0.3s;
             flex: 1;
             min-width: 120px;
-            max-width: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
         }
         
-        .btn-primary {
+        .btn-start {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
         
-        .btn-primary:active {
+        .btn-start:active {
             transform: scale(0.95);
         }
         
-        .btn-danger {
-            background: linear-gradient(135deg, #f093fb, #f5576c);
-            color: white;
-            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
-        }
-        
-        .btn-success {
-            background: linear-gradient(135deg, #4facfe, #00f2fe);
+        .btn-stop {
+            background: #e53e3e;
             color: white;
         }
         
-        .btn-secondary {
-            background: rgba(255,255,255,0.1);
+        .btn-scan {
+            background: linear-gradient(135deg, #48bb78, #38a169);
             color: white;
-            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4);
+            font-size: 20px;
+            padding: 18px 30px;
+        }
+        
+        .btn-scan:active {
+            transform: scale(0.95);
         }
         
         .btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
-            transform: none !important;
-        }
-        
-        .btn-small {
-            padding: 10px 20px;
-            font-size: 14px;
-            min-width: auto;
-            flex: 0 0 auto;
         }
         
         #result {
             width: 100%;
-            max-width: 500px;
-            padding: 15px 20px;
-            margin: 5px 15px;
+            max-width: 400px;
+            padding: 15px;
             border-radius: 15px;
-            font-size: 16px;
-            font-weight: 600;
             text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
             min-height: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            transition: all 0.3s;
-            word-break: break-word;
         }
         
-        .result-info {
+        .result-idle {
+            background: rgba(255,255,255,0.05);
+            color: #888;
+        }
+        
+        .result-scanning {
             background: rgba(102, 126, 234, 0.2);
             color: #667eea;
-            border: 1px solid rgba(102, 126, 234, 0.3);
         }
         
-        .result-success {
+        .result-done {
             background: rgba(72, 187, 120, 0.2);
             color: #48bb78;
-            border: 1px solid rgba(72, 187, 120, 0.3);
         }
         
         .result-error {
             background: rgba(245, 87, 108, 0.2);
             color: #f5576c;
-            border: 1px solid rgba(245, 87, 108, 0.3);
         }
         
         .result-walkin {
             background: rgba(251, 191, 36, 0.2);
             color: #f6ad55;
-            border: 1px solid rgba(251, 191, 36, 0.3);
         }
         
-        #walkin-form {
-            display: none;
-            width: 100%;
-            max-width: 500px;
-            padding: 20px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 15px;
-            margin: 10px 15px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        #walkin-form h3 {
-            text-align: center;
-            margin-bottom: 15px;
-            color: #f6ad55;
-        }
-        
-        #walkin-form input {
-            width: 100%;
-            padding: 14px;
-            margin: 8px 0;
-            border: 2px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            font-size: 16px;
-            background: rgba(255,255,255,0.05);
-            color: white;
-            transition: all 0.3s;
-        }
-        
-        #walkin-form input:focus {
-            outline: none;
-            border-color: #667eea;
-            background: rgba(255,255,255,0.1);
-        }
-        
-        #walkin-form input::placeholder {
-            color: rgba(255,255,255,0.5);
-        }
-        
-        #status-text {
+        #status {
             font-size: 14px;
-            color: rgba(255,255,255,0.6);
+            color: #666;
+            text-align: center;
             margin: 5px 0;
-            text-align: center;
-            padding: 0 15px;
-        }
-        
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .debug-info {
-            width: 100%;
-            max-width: 500px;
-            padding: 8px 15px;
-            margin: 5px 15px;
-            background: rgba(255,255,255,0.03);
-            border-radius: 8px;
-            font-size: 12px;
-            color: rgba(255,255,255,0.4);
-            text-align: center;
-            word-break: break-all;
         }
         
         .manual-entry {
             width: 100%;
-            max-width: 500px;
-            padding: 10px 15px;
+            max-width: 400px;
             display: flex;
             gap: 10px;
+            margin-top: 10px;
         }
         
         .manual-entry input {
             flex: 1;
             padding: 12px;
             border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.2);
-            background: rgba(255,255,255,0.05);
+            border: 1px solid #333;
+            background: #1a1a1a;
             color: white;
             font-size: 16px;
         }
@@ -336,37 +244,91 @@
         }
         
         .manual-entry input::placeholder {
-            color: rgba(255,255,255,0.3);
+            color: #555;
         }
         
-        .count-badge {
-            background: rgba(102, 126, 234, 0.2);
+        .btn-small {
+            padding: 12px 20px;
+            font-size: 14px;
+            min-width: auto;
+            flex: 0 0 auto;
+        }
+        
+        #walkin-form {
+            display: none;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            background: #1a1a1a;
+            border-radius: 15px;
+            margin-top: 10px;
+            border: 1px solid #333;
+        }
+        
+        #walkin-form h3 {
+            text-align: center;
+            color: #f6ad55;
+            margin-bottom: 15px;
+        }
+        
+        #walkin-form input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #333;
+            border-radius: 10px;
+            background: #0a0a0a;
+            color: white;
+            font-size: 16px;
+        }
+        
+        #walkin-form input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        #walkin-form input::placeholder {
+            color: #555;
+        }
+        
+        .badge {
+            display: inline-block;
             padding: 4px 12px;
             border-radius: 20px;
             font-size: 12px;
-            color: #667eea;
+            margin-left: 10px;
+        }
+        
+        .badge-on {
+            background: #48bb78;
+            color: white;
+        }
+        
+        .badge-off {
+            background: #666;
+            color: white;
         }
         
         @media (max-width: 480px) {
-            .header h1 { font-size: 20px; }
-            .btn { padding: 12px 20px; font-size: 14px; min-width: 100px; }
-            #result { font-size: 14px; padding: 12px 15px; }
+            .header h1 { font-size: 22px; }
+            .btn { font-size: 16px; padding: 12px 20px; }
+            .btn-scan { font-size: 18px; padding: 15px 20px; }
+            #result { font-size: 16px; }
         }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h1>🎫 Event Scanner</h1>
+    <h1>🎫 QR Scanner</h1>
     <p>Scan QR code to check-in</p>
 </div>
 
-<div class="scanner-container">
+<div class="scanner-box">
     <video id="video" playsinline autoplay></video>
-    <div class="placeholder-text" id="placeholderText">
+    <div class="placeholder" id="placeholder">
         <span class="icon">📷</span>
-        Tap "Start Camera"<br>
-        <small style="font-size:14px; opacity:0.6;">Camera will open automatically</small>
+        Camera Off
     </div>
     <div class="scan-overlay" id="scanOverlay">
         <div class="scan-frame"></div>
@@ -374,16 +336,20 @@
     </div>
 </div>
 
-<div id="status-text">📱 Tap "Start Camera" to begin</div>
+<div id="status">📱 Tap "Start Camera"</div>
 
 <div class="controls">
-    <button class="btn btn-primary" id="startBtn" onclick="startScanner()">📷 Start Camera</button>
-    <button class="btn btn-danger" id="stopBtn" onclick="stopScanner()" disabled>⏹ Stop</button>
+    <button class="btn btn-start" id="startBtn" onclick="startCamera()">📷 Start Camera</button>
+    <button class="btn btn-stop" id="stopBtn" onclick="stopCamera()" disabled>⏹ Stop</button>
 </div>
 
-<div class="debug-info" id="debugInfo">🔍 Ready</div>
+<div class="controls">
+    <button class="btn btn-scan" id="scanBtn" onclick="scanNow()" disabled>
+        📸 SCAN NOW
+    </button>
+</div>
 
-<div id="result" class="result-info">📱 Scan a QR code</div>
+<div id="result" class="result-idle">📱 Ready to scan</div>
 
 <div id="walkin-form">
     <h3>🆕 New Guest Registration</h3>
@@ -391,18 +357,18 @@
         <input type="text" id="name" placeholder="Full Name *" required>
         <input type="email" id="email" placeholder="Email *" required>
         <input type="tel" id="phone" placeholder="Phone Number">
-        <button type="submit" class="btn btn-success" style="width:100%;">✅ Register & Check-in</button>
+        <button type="submit" class="btn btn-start" style="width:100%;">✅ Register & Check-in</button>
     </form>
-    <button class="btn btn-secondary" onclick="closeWalkinForm()" style="width:100%; margin-top:10px;">✕ Cancel</button>
+    <button onclick="closeWalkinForm()" style="width:100%; padding:12px; margin-top:10px; background:#333; color:white; border:none; border-radius:10px; cursor:pointer;">✕ Cancel</button>
 </div>
 
 <div class="manual-entry">
     <input type="text" id="manualQR" placeholder="Enter ID manually (e.g. 1)">
-    <button onclick="manualCheckin()" class="btn btn-primary btn-small">Check-in</button>
+    <button onclick="manualCheckin()" class="btn btn-start btn-small">Check-in</button>
 </div>
 
 <!-- ========================================== -->
-<!-- QR SCANNER LIBRARY - Instascan (MORE RELIABLE) -->
+<!-- QR SCANNER LIBRARY -->
 <!-- ========================================== -->
 <script src="https://cdn.jsdelivr.net/npm/instascan@1.0.0/instascan.min.js">
 </script>
@@ -414,87 +380,38 @@
 const APP_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
 
 // ============================================
-// DEBUG HELPER
-// ============================================
-function debugLog(message) {
-    console.log('[DEBUG]', message);
-    const debugEl = document.getElementById('debugInfo');
-    if (debugEl) {
-        debugEl.textContent = '🔍 ' + message;
-    }
-}
-
-// ============================================
 // VARIABLES
 // ============================================
 let scanner = null;
+let isCameraOn = false;
 let isScanning = false;
 let lastScanned = '';
-let connectionTested = false;
 
 // ============================================
-// TEST CONNECTION ON LOAD
+// START CAMERA
 // ============================================
-function testConnection() {
-    debugLog('Testing connection to: ' + APP_SCRIPT_URL);
-    
-    fetch(APP_SCRIPT_URL + '?action=test')
-        .then(response => {
-            debugLog('Response status: ' + response.status);
-            return response.json();
-        })
-        .then(data => {
-            debugLog('✅ Connection successful!');
-            connectionTested = true;
-            document.getElementById('result').className = 'result-success';
-            document.getElementById('result').textContent = '✅ Connected to server! Ready to scan.';
-            document.getElementById('status-text').textContent = '✅ System ready';
-        })
-        .catch(error => {
-            debugLog('❌ Connection failed: ' + error.message);
-            document.getElementById('result').className = 'result-error';
-            document.getElementById('result').textContent = '❌ Cannot connect to server! Check URL';
-            document.getElementById('status-text').textContent = '⚠️ Check your APP_SCRIPT_URL';
-        });
-}
-
-// ============================================
-// START SCANNER - Using Instascan
-// ============================================
-function startScanner() {
+function startCamera() {
     const startBtn = document.getElementById('startBtn');
-    const statusText = document.getElementById('status-text');
+    const stopBtn = document.getElementById('stopBtn');
+    const scanBtn = document.getElementById('scanBtn');
+    const status = document.getElementById('status');
     const video = document.getElementById('video');
-    const placeholderText = document.getElementById('placeholderText');
+    const placeholder = document.getElementById('placeholder');
     const scanOverlay = document.getElementById('scanOverlay');
+    const result = document.getElementById('result');
     
-    if (isScanning) {
-        stopScanner();
-        setTimeout(() => startScanner(), 500);
-        return;
-    }
-    
-    if (!connectionTested) {
-        debugLog('Testing connection first...');
-        statusText.textContent = '🔍 Testing connection...';
-        testConnection();
-        setTimeout(() => startScanner(), 2000);
-        return;
-    }
-    
-    debugLog('Starting camera with Instascan...');
     startBtn.disabled = true;
-    startBtn.innerHTML = '<span class="loading"></span> Loading...';
-    statusText.textContent = '🔍 Initializing camera...';
+    startBtn.textContent = '⏳ Loading...';
+    status.textContent = '🔍 Initializing camera...';
+    result.className = 'result-scanning';
+    result.textContent = '⏳ Starting camera...';
 
-    // Get cameras
     Instascan.Camera.getCameras()
         .then(function(cameras) {
             if (cameras.length === 0) {
                 throw new Error('No cameras found');
             }
             
-            // Use back camera if available
             let selectedCamera = cameras[0];
             for (let cam of cameras) {
                 if (cam.name && cam.name.toLowerCase().includes('back')) {
@@ -503,75 +420,61 @@ function startScanner() {
                 }
             }
             
-            debugLog('Using camera: ' + selectedCamera.name);
-            
-            // Create scanner
             scanner = new Instascan.Scanner({
                 video: video,
                 mirror: false,
                 captureImage: false,
                 backgroundScan: false,
-                scanPeriod: 1
+                scanPeriod: 0.5
             });
             
-            // Add scan listener
             scanner.addListener('scan', function(content) {
-                if (lastScanned !== content) {
+                // Auto-scan when camera is on and scan button is pressed
+                if (isScanning && lastScanned !== content) {
                     lastScanned = content;
-                    debugLog('✅ QR Scanned: ' + content);
+                    isScanning = false;
+                    scanBtn.textContent = '📸 SCAN NOW';
+                    scanBtn.style.background = 'linear-gradient(135deg, #48bb78, #38a169)';
                     handleScan(content);
                     setTimeout(() => { lastScanned = ''; }, 2000);
                 }
             });
             
-            // Add error listener
-            scanner.addListener('error', function(err) {
-                debugLog('Scanner error: ' + err);
-            });
-            
-            // Start scanning
             return scanner.start(selectedCamera);
         })
         .then(function() {
-            isScanning = true;
+            isCameraOn = true;
             video.style.display = 'block';
             video.classList.add('active');
-            placeholderText.style.display = 'none';
+            placeholder.style.display = 'none';
             scanOverlay.classList.add('active');
             
-            statusText.textContent = '✅ Scanning... Point at QR code';
-            startBtn.innerHTML = '📷 Active';
+            status.textContent = '✅ Camera ready - Tap SCAN NOW';
+            startBtn.textContent = '📷 Active';
             startBtn.disabled = false;
-            document.getElementById('stopBtn').disabled = false;
-            document.getElementById('result').className = 'result-info';
-            document.getElementById('result').textContent = '📱 Scanning for QR code...';
-            debugLog('✅ Scanner active');
+            stopBtn.disabled = false;
+            scanBtn.disabled = false;
+            result.className = 'result-idle';
+            result.textContent = '📱 Tap "SCAN NOW" to scan QR';
+            
+            document.getElementById('status').innerHTML = '✅ Camera ready <span class="badge badge-on">ON</span>';
         })
         .catch(function(err) {
-            debugLog('❌ Scanner error: ' + err.message);
-            statusText.textContent = '❌ ' + err.message;
-            startBtn.innerHTML = '📷 Start Camera';
+            status.textContent = '❌ ' + err.message;
+            startBtn.textContent = '📷 Start Camera';
             startBtn.disabled = false;
+            result.className = 'result-error';
+            result.textContent = '❌ Camera error';
             
-            // Check if it's a camera permission issue
-            if (err.message && err.message.includes('permission')) {
-                alert('❌ Camera Permission Denied\n\n' +
-                      'Please allow camera access:\n' +
-                      '• iPhone: Settings → Safari → Camera → Allow\n' +
-                      '• Android: Settings → Apps → Chrome → Permissions → Camera → Allow\n\n' +
-                      'Then refresh and try again.');
-            }
+            alert('❌ Camera Error\n\n' + err.message + '\n\n' +
+                  'Please allow camera access in browser settings.');
         });
 }
 
 // ============================================
-// STOP SCANNER
+// STOP CAMERA
 // ============================================
-function stopScanner() {
-    const video = document.getElementById('video');
-    const placeholderText = document.getElementById('placeholderText');
-    const scanOverlay = document.getElementById('scanOverlay');
-    
+function stopCamera() {
     if (scanner) {
         try {
             scanner.stop();
@@ -579,30 +482,71 @@ function stopScanner() {
         scanner = null;
     }
     
+    const video = document.getElementById('video');
+    const placeholder = document.getElementById('placeholder');
+    const scanOverlay = document.getElementById('scanOverlay');
+    
     video.style.display = 'none';
     video.classList.remove('active');
-    placeholderText.style.display = 'block';
+    placeholder.style.display = 'block';
     scanOverlay.classList.remove('active');
     
+    isCameraOn = false;
     isScanning = false;
-    document.getElementById('status-text').textContent = '⏹ Camera stopped';
-    document.getElementById('startBtn').innerHTML = '📷 Start Camera';
+    
+    document.getElementById('startBtn').textContent = '📷 Start Camera';
     document.getElementById('startBtn').disabled = false;
     document.getElementById('stopBtn').disabled = true;
-    document.getElementById('result').className = 'result-info';
+    document.getElementById('scanBtn').disabled = true;
+    document.getElementById('scanBtn').textContent = '📸 SCAN NOW';
+    document.getElementById('status').innerHTML = '⏹ Camera stopped <span class="badge badge-off">OFF</span>';
+    document.getElementById('result').className = 'result-idle';
     document.getElementById('result').textContent = '📱 Camera is off';
+}
+
+// ============================================
+// SCAN NOW - Capture QR
+// ============================================
+function scanNow() {
+    if (!isCameraOn) {
+        alert('Please start camera first!');
+        return;
+    }
+    
+    const scanBtn = document.getElementById('scanBtn');
+    const result = document.getElementById('result');
+    const status = document.getElementById('status');
+    
+    isScanning = true;
+    scanBtn.textContent = '⏳ Scanning...';
+    scanBtn.style.background = '#f6ad55';
+    result.className = 'result-scanning';
+    result.textContent = '🔍 Scanning... Point at QR code';
+    status.textContent = '🔍 Scanning for QR code...';
+    
+    // If no QR detected after 5 seconds, reset
+    setTimeout(() => {
+        if (isScanning) {
+            isScanning = false;
+            scanBtn.textContent = '📸 SCAN NOW';
+            scanBtn.style.background = 'linear-gradient(135deg, #48bb78, #38a169)';
+            result.className = 'result-idle';
+            result.textContent = '⏳ No QR detected. Try again.';
+            status.textContent = '⏳ No QR detected';
+        }
+    }, 5000);
 }
 
 // ============================================
 // HANDLE QR SCAN
 // ============================================
 function handleScan(guestID) {
-    debugLog('Processing scan for ID: ' + guestID);
-    playBeep(600, 100);
+    const result = document.getElementById('result');
+    const status = document.getElementById('status');
     
-    document.getElementById('result').className = 'result-info';
-    document.getElementById('result').textContent = '⏳ Processing...';
-    document.getElementById('status-text').textContent = '🔍 Checking guest...';
+    result.className = 'result-scanning';
+    result.textContent = '⏳ Processing...';
+    status.textContent = '🔍 Checking guest...';
 
     fetch(APP_SCRIPT_URL, {
         method: 'POST',
@@ -615,48 +559,42 @@ function handleScan(guestID) {
         })
     })
     .then(response => {
-        debugLog('Response status: ' + response.status);
         if (!response.ok) {
             throw new Error('HTTP Error: ' + response.status);
         }
         return response.json();
     })
     .then(data => {
-        debugLog('Response: ' + JSON.stringify(data));
-        
         if (data.status === 'success') {
-            document.getElementById('result').className = 'result-success';
-            document.getElementById('result').textContent = '✅ ' + data.name + ' checked in!';
-            document.getElementById('status-text').textContent = '🎉 Welcome ' + data.name + '!';
-            playBeep(880, 200);
+            result.className = 'result-done';
+            result.textContent = '✅ ' + data.name + ' - CHECKED IN! 🎉';
+            status.textContent = '🎉 Welcome ' + data.name + '!';
+            playSound('success');
             if (navigator.vibrate) navigator.vibrate(200);
 
         } else if (data.status === 'walkin') {
-            document.getElementById('result').className = 'result-walkin';
-            document.getElementById('result').textContent = '🆕 New guest! Please register below.';
+            result.className = 'result-walkin';
+            result.textContent = '🆕 New guest! Please register below.';
             document.getElementById('walkin-form').style.display = 'block';
-            document.getElementById('status-text').textContent = '📝 Fill the registration form';
-            playBeep(500, 300);
-            if (navigator.vibrate) navigator.vibrate([100, 100, 100]);
+            status.textContent = '📝 Fill the registration form';
+            playSound('walkin');
 
         } else if (data.status === 'error') {
-            document.getElementById('result').className = 'result-error';
-            document.getElementById('result').textContent = data.message || '❌ Error!';
-            document.getElementById('status-text').textContent = '❌ Check-in failed';
-            playBeep(300, 400);
-            if (navigator.vibrate) navigator.vibrate(500);
+            result.className = 'result-error';
+            result.textContent = '❌ ' + data.message;
+            status.textContent = '❌ Check-in failed';
+            playSound('error');
 
         } else {
-            document.getElementById('result').className = 'result-error';
-            document.getElementById('result').textContent = '❌ Unknown response';
+            result.className = 'result-error';
+            result.textContent = '❌ Unknown error';
         }
     })
     .catch(error => {
-        debugLog('❌ Fetch error: ' + error.message);
-        document.getElementById('result').className = 'result-error';
-        document.getElementById('result').textContent = '❌ Network error! Check URL';
-        document.getElementById('status-text').textContent = '⚠️ Error: ' + error.message;
-        playBeep(300, 500);
+        result.className = 'result-error';
+        result.textContent = '❌ Network error! Check URL';
+        status.textContent = '⚠️ Error: ' + error.message;
+        playSound('error');
     });
 }
 
@@ -666,7 +604,6 @@ function handleScan(guestID) {
 function manualCheckin() {
     const id = document.getElementById('manualQR').value.trim();
     if (id) {
-        debugLog('Manual check-in for ID: ' + id);
         handleScan(id);
         document.getElementById('manualQR').value = '';
     } else {
@@ -689,8 +626,9 @@ function registerWalkin(e) {
         return;
     }
 
-    document.getElementById('result').className = 'result-info';
-    document.getElementById('result').textContent = '⏳ Registering...';
+    const result = document.getElementById('result');
+    result.className = 'result-scanning';
+    result.textContent = '⏳ Registering...';
 
     fetch(APP_SCRIPT_URL, {
         method: 'POST',
@@ -707,47 +645,59 @@ function registerWalkin(e) {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            document.getElementById('result').className = 'result-success';
-            document.getElementById('result').textContent = '✅ ' + data.name + ' registered & checked in!';
+            result.className = 'result-done';
+            result.textContent = '✅ ' + data.name + ' registered & checked in!';
             document.getElementById('walkin-form').style.display = 'none';
             document.getElementById('walkin-form').reset();
-            document.getElementById('status-text').textContent = '🎉 Welcome ' + data.name + '!';
-            playBeep(880, 300);
-            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            document.getElementById('status').textContent = '🎉 Welcome ' + data.name + '!';
+            playSound('success');
         } else {
-            document.getElementById('result').className = 'result-error';
-            document.getElementById('result').textContent = '❌ Registration failed: ' + (data.message || 'Error');
+            result.className = 'result-error';
+            result.textContent = '❌ Registration failed';
         }
     })
     .catch(error => {
-        document.getElementById('result').className = 'result-error';
-        document.getElementById('result').textContent = '❌ Network error!';
+        result.className = 'result-error';
+        result.textContent = '❌ Network error!';
     });
 }
 
 function closeWalkinForm() {
     document.getElementById('walkin-form').style.display = 'none';
     document.getElementById('walkin-form').reset();
-    document.getElementById('result').className = 'result-info';
-    document.getElementById('result').textContent = '📱 Scan a QR code';
-    document.getElementById('status-text').textContent = '✅ Ready to scan';
+    document.getElementById('result').className = 'result-idle';
+    document.getElementById('result').textContent = '📱 Ready to scan';
+    document.getElementById('status').textContent = '✅ Ready';
 }
 
 // ============================================
-// BEEP SOUND
+// SOUND EFFECTS
 // ============================================
-function playBeep(freq, duration) {
+function playSound(type) {
     try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const oscillator = audioCtx.createOscillator();
         const gainNode = audioCtx.createGain();
+        
         oscillator.connect(gainNode);
         gainNode.connect(audioCtx.destination);
-        oscillator.frequency.value = freq;
-        oscillator.type = 'sine';
         gainNode.gain.value = 0.15;
-        oscillator.start();
-        oscillator.stop(audioCtx.currentTime + duration / 1000);
+        
+        if (type === 'success') {
+            oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+            oscillator.frequency.setValueAtTime(1100, audioCtx.currentTime + 0.1);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.2);
+        } else if (type === 'error') {
+            oscillator.frequency.setValueAtTime(300, audioCtx.currentTime);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.3);
+        } else if (type === 'walkin') {
+            oscillator.frequency.setValueAtTime(500, audioCtx.currentTime);
+            oscillator.frequency.setValueAtTime(700, audioCtx.currentTime + 0.1);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.2);
+        }
     } catch(e) {}
 }
 
@@ -755,34 +705,19 @@ function playBeep(freq, duration) {
 // INITIALIZE
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
-    debugLog('Page loaded.');
-    document.getElementById('result').className = 'result-info';
-    document.getElementById('result').textContent = '📱 Testing connection...';
-    
-    setTimeout(testConnection, 1000);
-    
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if (isMobile) {
-        document.getElementById('status-text').textContent = '📱 Tap "Start Camera" to begin';
-    }
-    
-    console.log('📱 Event Scanner loaded');
+    console.log('📱 Scanner loaded');
     console.log('🔗 API URL:', APP_SCRIPT_URL);
+    document.getElementById('status').innerHTML = '📱 Tap "Start Camera" <span class="badge badge-off">OFF</span>';
 });
 
 // ============================================
 // CLEANUP
 // ============================================
 window.addEventListener('beforeunload', function() {
-    stopScanner();
-});
-
-// ============================================
-// KEYBOARD SHORTCUT
-// ============================================
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && document.getElementById('manualQR').value) {
-        manualCheckin();
+    if (scanner) {
+        try {
+            scanner.stop();
+        } catch(e) {}
     }
 });
 </script>
