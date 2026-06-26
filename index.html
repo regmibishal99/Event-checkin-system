@@ -26,9 +26,7 @@
     position: relative; border: 2px solid var(--border);
   }
   #video { width: 100%; height: 100%; object-fit: cover; display: block; }
-  canvas#overlay {
-    position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;
-  }
+  canvas#overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
   .cam-idle {
     position: absolute; inset: 0; display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 8px;
@@ -37,60 +35,60 @@
   .cam-idle svg { width: 48px; height: 48px; opacity: 0.4; }
   .frame {
     position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%); width: 60%; height: 60%; pointer-events: none;
+    transform: translate(-50%,-50%); width: 60%; height: 60%; pointer-events: none;
   }
-  .frame::before, .frame::after, .frame span::before, .frame span::after {
-    content: ''; position: absolute; width: 22px; height: 22px;
-    border-color: var(--accent); border-style: solid; border-width: 0;
+  .frame::before,.frame::after,.frame span::before,.frame span::after {
+    content:''; position:absolute; width:22px; height:22px;
+    border-color:var(--accent); border-style:solid; border-width:0;
   }
-  .frame::before  { top:0; left:0;  border-top-width:3px; border-left-width:3px;  border-radius:3px 0 0 0; }
-  .frame::after   { top:0; right:0; border-top-width:3px; border-right-width:3px; border-radius:0 3px 0 0; }
-  .frame span::before { bottom:0; left:0;  border-bottom-width:3px; border-left-width:3px;  border-radius:0 0 0 3px; }
-  .frame span::after  { bottom:0; right:0; border-bottom-width:3px; border-right-width:3px; border-radius:0 0 3px 0; }
+  .frame::before  { top:0;    left:0;  border-top-width:3px;    border-left-width:3px;   border-radius:3px 0 0 0; }
+  .frame::after   { top:0;    right:0; border-top-width:3px;    border-right-width:3px;  border-radius:0 3px 0 0; }
+  .frame span::before { bottom:0; left:0;  border-bottom-width:3px; border-left-width:3px;   border-radius:0 0 0 3px; }
+  .frame span::after  { bottom:0; right:0; border-bottom-width:3px; border-right-width:3px;  border-radius:0 0 3px 0; }
   .scan-line {
-    position: absolute; left: 20%; right: 20%; height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    animation: sweep 1.8s ease-in-out infinite; border-radius: 2px;
+    position:absolute; left:20%; right:20%; height:2px;
+    background:linear-gradient(90deg,transparent,var(--accent),transparent);
+    animation:sweep 1.8s ease-in-out infinite; border-radius:2px;
   }
   @keyframes sweep { 0%{top:20%} 50%{top:80%} 100%{top:20%} }
   #toast {
-    width: 100%; max-width: 360px; padding: 14px 16px; border-radius: 12px;
-    font-size: 15px; font-weight: 600; text-align: center;
-    background: var(--surface); color: var(--muted); border: 1.5px solid var(--border);
-    min-height: 52px; display: flex; align-items: center; justify-content: center;
-    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    width:100%; max-width:360px; padding:14px 16px; border-radius:12px;
+    font-size:15px; font-weight:600; text-align:center;
+    background:var(--surface); color:var(--muted); border:1.5px solid var(--border);
+    min-height:52px; display:flex; align-items:center; justify-content:center;
+    transition:background .2s,color .2s,border-color .2s;
   }
   #toast.success { background:rgba(52,211,153,.1); color:var(--success); border-color:var(--success); }
   #toast.error   { background:rgba(248,113,113,.1); color:var(--error);   border-color:var(--error); }
   #toast.loading { background:rgba(79,142,247,.1);  color:var(--accent);  border-color:var(--accent); }
   #toast.warn    { background:rgba(251,191,36,.1);  color:var(--warn);    border-color:var(--warn); }
   .btn {
-    width: 100%; max-width: 360px; padding: 15px; border: none; border-radius: 12px;
-    font-size: 16px; font-weight: 700; cursor: pointer;
-    transition: opacity .15s, transform .1s; letter-spacing: 0.2px;
+    width:100%; max-width:360px; padding:15px; border:none; border-radius:12px;
+    font-size:16px; font-weight:700; cursor:pointer;
+    transition:opacity .15s,transform .1s;
   }
-  .btn:active { transform: scale(0.97); opacity: 0.85; }
-  .btn:disabled { opacity: 0.4; cursor: default; }
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-danger  { background: #ef4444; color: #fff; }
-  .btn-ghost   { background: var(--surface); color: var(--text); border: 1.5px solid var(--border); }
-  .row { display: flex; gap: 8px; width: 100%; max-width: 360px; }
+  .btn:active  { transform:scale(0.97); opacity:.85; }
+  .btn:disabled { opacity:.4; cursor:default; }
+  .btn-primary { background:var(--accent); color:#fff; }
+  .btn-danger  { background:#ef4444; color:#fff; }
+  .btn-ghost   { background:var(--surface); color:var(--text); border:1.5px solid var(--border); }
+  .row { display:flex; gap:8px; width:100%; max-width:360px; }
   input {
-    flex: 1; padding: 13px 14px; border-radius: 12px;
-    border: 1.5px solid var(--border); background: var(--surface);
-    color: var(--text); font-size: 15px;
+    flex:1; padding:13px 14px; border-radius:12px;
+    border:1.5px solid var(--border); background:var(--surface);
+    color:var(--text); font-size:15px;
   }
-  input:focus { outline: none; border-color: var(--accent); }
-  input::placeholder { color: var(--muted); }
+  input:focus { outline:none; border-color:var(--accent); }
+  input::placeholder { color:var(--muted); }
   #walkinForm {
-    display: none; flex-direction: column; gap: 10px;
-    width: 100%; max-width: 360px; background: var(--surface);
-    border: 1.5px solid var(--warn); border-radius: 14px; padding: 16px;
+    display:none; flex-direction:column; gap:10px;
+    width:100%; max-width:360px; background:var(--surface);
+    border:1.5px solid var(--warn); border-radius:14px; padding:16px;
   }
-  #walkinForm h2 { font-size: 15px; color: var(--warn); text-align: center; }
+  #walkinForm h2 { font-size:15px; color:var(--warn); text-align:center; }
   .divider {
-    width: 100%; max-width: 360px; text-align: center; font-size: 12px;
-    color: var(--muted); border-top: 1px solid var(--border); padding-top: 4px;
+    width:100%; max-width:360px; text-align:center; font-size:12px;
+    color:var(--muted); border-top:1px solid var(--border); padding-top:4px;
   }
 </style>
 </head>
@@ -133,9 +131,27 @@
 </div>
 
 <script>
-// ── PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE ──────────
+// ── PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE ──
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyRAk0lMbS_0MrJCrBSKDxot6WmVAmqmxN8VCNxcrNJvXNhTErFUUcGLVy1SM_aVnm6/exec';
-// ────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────
+
+// Uses GET requests with URL params — fixes CORS error when
+// opening HTML file directly on a phone (file:// protocol)
+async function callSheet(params) {
+  var url = SHEET_URL + '?';
+  var parts = [];
+  for (var key in params) {
+    parts.push(encodeURIComponent(key) + '=' + encodeURIComponent(params[key]));
+  }
+  url += parts.join('&');
+
+  // no-cors not needed — Apps Script GET allows cross-origin
+  var res  = await fetch(url, { method: 'GET', redirect: 'follow' });
+  var text = await res.text();
+  // Apps Script sometimes wraps in while(1); strip it
+  text = text.replace(/^while\(1\);/, '').trim();
+  return JSON.parse(text);
+}
 
 let stream = null, animFrame = null, lastCode = '', lastCodeTime = 0;
 const COOLDOWN = 3000;
@@ -144,9 +160,9 @@ const overlay = document.getElementById('overlay');
 const ctx     = overlay.getContext('2d');
 
 function toast(msg, type) {
-  const t = document.getElementById('toast');
+  var t = document.getElementById('toast');
   t.textContent = msg;
-  t.className = type || '';
+  t.className   = type || '';
 }
 
 async function startCamera() {
@@ -159,32 +175,32 @@ async function startCamera() {
     });
     video.srcObject = stream;
     await video.play();
-    document.getElementById('camIdle').style.display = 'none';
-    document.getElementById('frameEl').style.display = '';
+    document.getElementById('camIdle').style.display  = 'none';
+    document.getElementById('frameEl').style.display  = '';
     document.getElementById('scanLine').style.display = '';
     document.getElementById('startBtn').style.display = 'none';
-    document.getElementById('stopBtn').style.display = '';
+    document.getElementById('stopBtn').style.display  = '';
     toast('Point camera at a QR code', 'loading');
     tick();
   } catch(err) {
     toast('❌ Camera error: ' + err.message, 'error');
     document.getElementById('startBtn').disabled = false;
-    alert('Camera access denied.\n\nPlease allow camera in your browser settings, then reload the page.');
+    alert('Camera access denied.\n\nAllow camera in your browser settings then reload.');
   }
 }
 
 function stopCamera() {
   if (animFrame) cancelAnimationFrame(animFrame);
-  if (stream) stream.getTracks().forEach(t => t.stop());
+  if (stream)    stream.getTracks().forEach(function(t) { t.stop(); });
   stream = null; animFrame = null;
   video.srcObject = null;
   ctx.clearRect(0, 0, overlay.width, overlay.height);
-  document.getElementById('camIdle').style.display = '';
-  document.getElementById('frameEl').style.display = 'none';
+  document.getElementById('camIdle').style.display  = '';
+  document.getElementById('frameEl').style.display  = 'none';
   document.getElementById('scanLine').style.display = 'none';
   document.getElementById('startBtn').style.display = '';
-  document.getElementById('startBtn').disabled = false;
-  document.getElementById('stopBtn').style.display = 'none';
+  document.getElementById('startBtn').disabled       = false;
+  document.getElementById('stopBtn').style.display   = 'none';
   toast('Camera stopped');
 }
 
@@ -194,12 +210,12 @@ function tick() {
   overlay.height = video.videoHeight || 300;
   if (video.readyState === video.HAVE_ENOUGH_DATA && overlay.width > 0) {
     ctx.drawImage(video, 0, 0, overlay.width, overlay.height);
-    const imgData = ctx.getImageData(0, 0, overlay.width, overlay.height);
-    const code = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'dontInvert' });
+    var imgData = ctx.getImageData(0, 0, overlay.width, overlay.height);
+    var code    = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'dontInvert' });
     if (code) {
-      const now = Date.now();
+      var now = Date.now();
       if (code.data !== lastCode || now - lastCodeTime > COOLDOWN) {
-        lastCode = code.data;
+        lastCode     = code.data;
         lastCodeTime = now;
         highlightQR(code.location);
         handleCheckin(code.data.trim());
@@ -213,27 +229,20 @@ function tick() {
 
 function highlightQR(loc) {
   ctx.clearRect(0, 0, overlay.width, overlay.height);
-  ctx.strokeStyle = '#34d399';
-  ctx.lineWidth = 3;
+  ctx.strokeStyle = '#34d399'; ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(loc.topLeftCorner.x,     loc.topLeftCorner.y);
   ctx.lineTo(loc.topRightCorner.x,    loc.topRightCorner.y);
   ctx.lineTo(loc.bottomRightCorner.x, loc.bottomRightCorner.y);
   ctx.lineTo(loc.bottomLeftCorner.x,  loc.bottomLeftCorner.y);
-  ctx.closePath();
-  ctx.stroke();
+  ctx.closePath(); ctx.stroke();
 }
 
 async function handleCheckin(id) {
   if (!id) return;
   toast('⏳ Checking in…', 'loading');
   try {
-    const res = await fetch(SHEET_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'checkin', id: id })
-    });
-    const data = await res.json();
+    var data = await callSheet({ action: 'checkin', id: id });
 
     if (data.status === 'success') {
       toast('✅ ' + data.name + ' — Checked In! 🎉', 'success');
@@ -250,16 +259,16 @@ async function handleCheckin(id) {
       beep('warn');
 
     } else {
-      toast('❌ Unknown error', 'error');
+      toast('❌ Unknown response', 'error');
     }
   } catch(err) {
-    toast('❌ Network error — check your URL', 'error');
+    toast('❌ ' + err.message, 'error');
     console.error(err);
   }
 }
 
 function manualCheckin() {
-  const id = document.getElementById('manualId').value.trim();
+  var id = document.getElementById('manualId').value.trim();
   if (!id) { toast('Enter a Guest ID first', 'error'); return; }
   document.getElementById('manualId').value = '';
   handleCheckin(id);
@@ -269,27 +278,21 @@ document.getElementById('manualId').addEventListener('keydown', function(e) {
 });
 
 async function registerWalkin() {
-  const name  = document.getElementById('wiName').value.trim();
-  const email = document.getElementById('wiEmail').value.trim();
-  const phone = document.getElementById('wiPhone').value.trim();
+  var name  = document.getElementById('wiName').value.trim();
+  var email = document.getElementById('wiEmail').value.trim();
+  var phone = document.getElementById('wiPhone').value.trim();
   if (!name || !email) { toast('Name and Email are required', 'error'); return; }
   toast('⏳ Registering…', 'loading');
   try {
-    const res = await fetch(SHEET_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'register', name: name, email: email, phone: phone })
-    });
-    const data = await res.json();
+    var data = await callSheet({ action: 'register', name: name, email: email, phone: phone });
     if (data.status === 'success') {
       toast('✅ ' + data.name + ' registered & checked in!', 'success');
-      closeWalkin();
-      beep('success');
+      closeWalkin(); beep('success');
     } else {
       toast('❌ Registration failed', 'error');
     }
   } catch(err) {
-    toast('❌ Network error', 'error');
+    toast('❌ ' + err.message, 'error');
   }
 }
 
@@ -303,13 +306,13 @@ function closeWalkin() {
 
 function beep(type) {
   try {
-    const ac  = new AudioContext();
-    const osc = ac.createOscillator();
-    const g   = ac.createGain();
+    var ac  = new AudioContext();
+    var osc = ac.createOscillator();
+    var g   = ac.createGain();
     osc.connect(g); g.connect(ac.destination); g.gain.value = 0.12;
-    if (type === 'success') { osc.frequency.value = 880; osc.start(); osc.stop(ac.currentTime + 0.15); }
-    else if (type === 'error') { osc.frequency.value = 280; osc.start(); osc.stop(ac.currentTime + 0.3); }
-    else { osc.frequency.value = 600; osc.start(); osc.stop(ac.currentTime + 0.15); }
+    if (type === 'success')     { osc.frequency.value = 880; osc.start(); osc.stop(ac.currentTime + 0.15); }
+    else if (type === 'error')  { osc.frequency.value = 280; osc.start(); osc.stop(ac.currentTime + 0.3); }
+    else                        { osc.frequency.value = 600; osc.start(); osc.stop(ac.currentTime + 0.15); }
   } catch(e) {}
 }
 </script>
