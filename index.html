@@ -2,317 +2,475 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Scanner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Event Scanner - Mobile</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        html, body {
-            min-height: 100%;
-        }
+        
         body {
-            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(180deg, #f3f7fb 0%, #e9eef4 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #0a0a0a;
+            color: white;
             min-height: 100vh;
-            padding: 24px;
-            color: #334155;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
         }
-        .container {
-            background: #ffffff;
-            padding: 34px 30px;
-            border-radius: 24px;
-            box-shadow: 0 22px 60px rgba(15, 23, 42, 0.08);
-            max-width: 520px;
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             width: 100%;
+            padding: 20px;
             text-align: center;
-            border: 1px solid rgba(148, 163, 184, 0.18);
+            z-index: 10;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
-        h1 {
-            color: #102a43;
-            margin-bottom: 8px;
-            font-size: 32px;
-            letter-spacing: -0.02em;
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 1px;
         }
-        .subtitle {
-            color: #627d98;
-            margin-bottom: 28px;
-            font-size: 15px;
-            line-height: 1.6;
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 5px;
         }
-        #video-container {
+        
+        /* Video Container */
+        .scanner-container {
             position: relative;
             width: 100%;
-            max-width: 460px;
-            margin: 0 auto 24px;
+            max-width: 500px;
+            aspect-ratio: 1/1;
+            background: #000;
+            margin: 10px auto;
             border-radius: 20px;
             overflow: hidden;
-            background: #0f172a;
-            border: 1px solid rgba(96, 165, 250, 0.2);
+            border: 3px solid #667eea;
+            box-shadow: 0 0 40px rgba(102, 126, 234, 0.3);
         }
+        
         #video {
             width: 100%;
+            height: 100%;
+            object-fit: cover;
             display: block;
-            min-height: 280px;
-            background: #000;
         }
-        .button-row {
+        
+        /* Scanner Overlay */
+        .scan-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+        
+        .scan-frame {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70%;
+            height: 70%;
+            border: 3px solid rgba(102, 126, 234, 0.8);
+            border-radius: 20px;
+            box-shadow: 0 0 0 4000px rgba(0,0,0,0.5);
+        }
+        
+        .scan-line {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #667eea, transparent);
+            animation: scan 2s infinite;
+            border-radius: 2px;
+        }
+        
+        @keyframes scan {
+            0% { transform: translate(-50%, -60%); }
+            50% { transform: translate(-50%, 60%); }
+            100% { transform: translate(-50%, -60%); }
+        }
+        
+        /* Controls */
+        .controls {
             display: flex;
+            gap: 15px;
+            padding: 15px;
+            width: 100%;
+            max-width: 500px;
             justify-content: center;
-            gap: 12px;
             flex-wrap: wrap;
-            margin-bottom: 18px;
         }
+        
         .btn {
-            background: #2563eb;
-            color: white;
+            padding: 14px 30px;
             border: none;
-            padding: 12px 24px;
-            border-radius: 999px;
-            font-size: 15px;
+            border-radius: 50px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
-            box-shadow: 0 12px 24px rgba(37, 99, 235, 0.16);
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 120px;
+            max-width: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
-        .btn:hover {
-            background: #1d4ed8;
-            transform: translateY(-1px);
-            box-shadow: 0 16px 28px rgba(37, 99, 235, 0.18);
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
+        
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+        }
+        
         .btn-danger {
-            background: #dc2626;
-            box-shadow: 0 12px 24px rgba(220, 38, 38, 0.15);
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
         }
+        
         .btn-danger:hover {
-            background: #b91c1c;
+            transform: scale(1.05);
         }
+        
         .btn-success {
-            background: #16a34a;
-            box-shadow: 0 12px 24px rgba(22, 163, 74, 0.14);
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
         }
-        .btn-success:hover {
-            background: #15803d;
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
         }
+        
+        /* Result Box */
         #result {
-            margin: 22px 0;
-            padding: 18px;
-            border-radius: 16px;
-            font-size: 17px;
+            width: 100%;
+            max-width: 500px;
+            padding: 15px 20px;
+            margin: 5px 15px;
+            border-radius: 15px;
+            font-size: 16px;
             font-weight: 600;
-            min-height: 64px;
-            text-align: left;
-            line-height: 1.5;
-            border: 1px solid transparent;
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
         }
-        .success {
-            background: #ecfdf5;
-            color: #065f46;
-            border-color: #d1fae5;
+        
+        .result-info {
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+            border: 1px solid rgba(102, 126, 234, 0.3);
         }
-        .error {
-            background: #fef2f2;
-            color: #991b1b;
-            border-color: #fecaca;
+        
+        .result-success {
+            background: rgba(72, 187, 120, 0.2);
+            color: #48bb78;
+            border: 1px solid rgba(72, 187, 120, 0.3);
         }
-        .info {
-            background: #eff6ff;
-            color: #1d4ed8;
-            border-color: #bfdbfe;
+        
+        .result-error {
+            background: rgba(245, 87, 108, 0.2);
+            color: #f5576c;
+            border: 1px solid rgba(245, 87, 108, 0.3);
         }
+        
+        .result-walkin {
+            background: rgba(251, 191, 36, 0.2);
+            color: #f6ad55;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+        
+        /* Walk-in Form */
         #walkin-form {
             display: none;
-            margin-top: 22px;
-            padding: 24px;
-            background: #f8fafc;
-            border-radius: 18px;
-            border: 1px solid rgba(148, 163, 184, 0.16);
-            text-align: left;
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            margin: 10px 15px;
+            border: 1px solid rgba(255,255,255,0.1);
         }
+        
         #walkin-form h3 {
-            margin-bottom: 16px;
-            color: #0f172a;
-            font-size: 19px;
+            text-align: center;
+            margin-bottom: 15px;
+            color: #f6ad55;
         }
+        
         #walkin-form input {
             width: 100%;
-            padding: 14px 16px;
-            margin: 10px 0;
-            border: 1px solid #cbd5e1;
+            padding: 14px;
+            margin: 8px 0;
+            border: 2px solid rgba(255,255,255,0.1);
             border-radius: 12px;
-            font-size: 15px;
-            color: #0f172a;
-            background: #ffffff;
+            font-size: 16px;
+            background: rgba(255,255,255,0.05);
+            color: white;
+            transition: all 0.3s;
         }
+        
         #walkin-form input:focus {
             outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+            border-color: #667eea;
+            background: rgba(255,255,255,0.1);
         }
-        .stats {
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
-            margin-top: 24px;
-            padding: 18px;
-            background: #f8fafc;
-            border-radius: 18px;
-            border: 1px solid rgba(148, 163, 184, 0.16);
+        
+        #walkin-form input::placeholder {
+            color: rgba(255,255,255,0.5);
         }
-        .stat-item {
-            flex: 1;
+        
+        #walkin-form .btn {
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .btn-cancel {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            margin-top: 5px;
+        }
+        
+        .btn-cancel:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        /* Status */
+        #status-text {
+            font-size: 14px;
+            color: rgba(255,255,255,0.6);
+            margin: 5px 0;
             text-align: center;
         }
-        .stat-number {
-            font-size: 28px;
-            font-weight: 700;
-            color: #0f172a;
+        
+        /* Mobile Optimizations */
+        @media (max-width: 480px) {
+            .header h1 { font-size: 20px; }
+            .btn { padding: 12px 20px; font-size: 14px; min-width: 100px; }
+            #result { font-size: 14px; padding: 12px 15px; }
         }
-        .stat-label {
-            margin-top: 6px;
-            font-size: 13px;
-            color: #64748b;
-            letter-spacing: 0.02em;
-            text-transform: uppercase;
-        }
-        .hidden {
-            display: none;
-        }
-        #scan-status {
-            font-size: 14px;
-            color: #64748b;
-            margin: 12px 0 0;
+        
+        @media (orientation: landscape) and (max-height: 500px) {
+            .scanner-container { max-height: 50vh; aspect-ratio: auto; }
+            .header { padding: 10px; }
+            .header h1 { font-size: 18px; }
         }
     </style>
 </head>
 <body>
 
-<div class="container">
+<!-- Header -->
+<div class="header">
     <h1>🎫 Event Scanner</h1>
-    <p class="subtitle">Scan QR code to check-in guests</p>
-    
-    <div id="video-container">
-        <div id="qr-reader"></div>
-    </div>
-    
-    <div class="button-row">
-        <button class="btn" onclick="startScanner()">📷 Start Camera</button>
-        <button class="btn btn-danger" onclick="stopScanner()">⏹ Stop</button>
-    </div>
-    
-    <div id="scan-status">Camera is off</div>
-    
-    <div id="result" class="info">
-        📱 Scan a QR code
-    </div>
-    
-    <!-- Walk-in Registration Form -->
-    <div id="walkin-form">
-        <h3>🆕 New Guest Registration</h3>
-        <form id="walkin-form-form" onsubmit="registerWalkin(event)">
-            <input type="text" id="name" placeholder="Full Name *" required>
-            <input type="email" id="email" placeholder="Email *" required>
-            <input type="tel" id="phone" placeholder="Phone Number">
-            <button type="submit" class="btn btn-success" style="width:100%;">Register & Check-in</button>
-        </form>
-        <button class="btn" onclick="closeWalkinForm()" style="width:100%; margin-top:10px;">Cancel</button>
-    </div>
-    
-    <!-- Stats -->
-    <div class="stats">
-        <div class="stat-item">
-            <div class="stat-number" id="total-count">0</div>
-            <div class="stat-label">Total Guests</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-number" id="checked-count">0</div>
-            <div class="stat-label">Checked In</div>
-        </div>
+    <p>Scan QR code to check-in</p>
+</div>
+
+<!-- Scanner -->
+<div class="scanner-container">
+    <video id="video" playsinline autoplay></video>
+    <div class="scan-overlay">
+        <div class="scan-frame"></div>
+        <div class="scan-line"></div>
     </div>
 </div>
 
-<!-- QR Scanner Library -->
-<script src="https://unpkg.com/html5-qrcode@2.3.7/minified/html5-qrcode.min.js"></script>
+<!-- Status -->
+<div id="status-text">📷 Tap "Start Camera" to begin</div>
+
+<!-- Controls -->
+<div class="controls">
+    <button class="btn btn-primary" id="startBtn" onclick="startScanner()">📷 Start Camera</button>
+    <button class="btn btn-danger" id="stopBtn" onclick="stopScanner()" disabled>⏹ Stop</button>
+</div>
+
+<!-- Result -->
+<div id="result" class="result-info">📱 Scan a QR code</div>
+
+<!-- Walk-in Form -->
+<div id="walkin-form">
+    <h3>🆕 New Guest Registration</h3>
+    <form onsubmit="registerWalkin(event)">
+        <input type="text" id="name" placeholder="Full Name *" required>
+        <input type="email" id="email" placeholder="Email *" required>
+        <input type="tel" id="phone" placeholder="Phone Number">
+        <button type="submit" class="btn btn-success">✅ Register & Check-in</button>
+    </form>
+    <button class="btn btn-cancel" onclick="closeWalkinForm()">✕ Cancel</button>
+</div>
+
+<!-- ========================================== -->
+<!-- QR SCANNER LIBRARY (Mobile Optimized) -->
+<!-- ========================================== -->
+<script src="https://unpkg.com/@zxing/browser@0.0.7/umd/index.min.js">
+</script>
 
 <script>
 // ============================================
-// CONFIGURATION - CHANGE THIS!
+!
 // ============================================
-const APP_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
-// Example: 'https://script.google.com/macros/s/ABC123.../exec'
+const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyRAk0lMbS_0MrJCrBSKDxot6WmVAmqmxN8VCNxcrNJvXNhTErFUUcGLVy1SM_aVnm6/exec';
 
 // ============================================
-// QR SCANNER
+// VARIABLES
 // ============================================
 let scanner = null;
 let isScanning = false;
-let lastScanTime = 0;
+let scanTimeout = null;
 
-function startScanner() {
-    if (isScanning) return;
+// ============================================
+// START SCANNER (Mobile Optimized)
+// ============================================
+async function startScanner() {
+    try {
+        // Check if camera is supported
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert('❌ Camera not supported on this device/browser');
+            return;
+        }
 
-    document.getElementById('scan-status').textContent = '🔍 Initializing camera...';
-    document.getElementById('result').className = 'info';
-    document.getElementById('result').textContent = '📱 Requesting camera permission...';
+        document.getElementById('status-text').textContent = '🔍 Requesting camera...';
+        document.getElementById('startBtn').disabled = true;
+        document.getElementById('startBtn').textContent = '⏳ Loading...';
 
-    if (scanner) {
-        scanner.clear().catch(() => {});
-    }
-    scanner = new Html5Qrcode('qr-reader');
-    const config = {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-        experimentalFeatures: { useBarCodeDetectorIfSupported: true }
-    };
+        // Get video element
+        const video = document.getElementById('video');
 
-    Html5Qrcode.getCameras()
-        .then(cameras => {
-            if (!cameras || cameras.length === 0) {
-                throw new Error('No cameras found');
-            }
-
-            const backCamera = cameras.find(cam => cam.label.toLowerCase().includes('back') || cam.label.toLowerCase().includes('rear'));
-            const cameraId = backCamera ? backCamera.id : cameras[0].id;
-
-            return scanner.start(
-                cameraId,
-                config,
-                qrCodeMessage => {
-                    const now = Date.now();
-                    if (now - lastScanTime < 1500) {
-                        return;
-                    }
-                    lastScanTime = now;
-                    handleScan(qrCodeMessage);
-                },
-                errorMessage => {
-                    console.debug('Scan error:', errorMessage);
-                }
-            );
-        })
-        .then(() => {
-            isScanning = true;
-            document.getElementById('scan-status').textContent = '✅ Camera active - Scan a QR code';
-            document.getElementById('result').className = 'info';
-            document.getElementById('result').textContent = '📱 Scanning...';
-            document.getElementById('walkin-form').style.display = 'none';
-        })
-        .catch(err => {
-            alert('Camera error: ' + err.message);
-            document.getElementById('scan-status').textContent = '❌ Camera error: ' + err.message;
+        // Request camera with mobile-friendly settings
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: 'environment',
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+                aspectRatio: { ideal: 1.0 }
+            },
+            audio: false
         });
-    // Show scanning status
-    document.getElementById('result').className = 'info';
-    document.getElementById('result').textContent = '⏳ Checking guest...';
+
+        // Set video source
+        video.srcObject = stream;
+        await video.play();
+
+        // Create QR scanner
+        const codeReader = new ZXing.BrowserMultiFormatReader();
+        scanner = codeReader;
+
+        // Start decoding
+        codeReader.decodeFromVideoElement(video, (result, err) => {
+            if (result) {
+                // QR Code detected!
+                const qrData = result.getText();
+                console.log('QR Scanned:', qrData);
+                handleScan(qrData);
+                
+                // Stop scanning after successful scan (prevents multiple scans)
+                if (scanTimeout) {
+                    clearTimeout(scanTimeout);
+                }
+                scanTimeout = setTimeout(() => {
+                    // Resume scanning after 3 seconds
+                }, 3000);
+            }
+        });
+
+        isScanning = true;
+        document.getElementById('status-text').textContent = '✅ Scanning... Point at QR code';
+        document.getElementById('startBtn').textContent = '📷 Camera Active';
+        document.getElementById('stopBtn').disabled = false;
+        document.getElementById('result').className = 'result-info';
+        document.getElementById('result').textContent = '📱 Scanning for QR code...';
+
+    } catch (error) {
+        console.error('Scanner error:', error);
+        document.getElementById('status-text').textContent = '❌ Camera error: ' + error.message;
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('startBtn').textContent = '📷 Start Camera';
+        
+        // Show helpful message
+        let errorMsg = '❌ Camera error: ';
+        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+            errorMsg += 'Camera permission denied. Please allow camera access.';
+        } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+            errorMsg += 'No camera found on this device.';
+        } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+            errorMsg += 'Camera is in use by another app.';
+        } else {
+            errorMsg += error.message;
+        }
+        alert(errorMsg);
+    }
+}
+
+// ============================================
+// STOP SCANNER
+// ============================================
+function stopScanner() {
+    if (scanner) {
+        try {
+            scanner.reset();
+        } catch(e) {}
+        scanner = null;
+    }
+
+    const video = document.getElementById('video');
+    if (video.srcObject) {
+        try {
+            video.srcObject.getTracks().forEach(track => track.stop());
+        } catch(e) {}
+        video.srcObject = null;
+    }
+
+    isScanning = false;
+    document.getElementById('status-text').textContent = '⏹ Camera stopped';
+    document.getElementById('startBtn').disabled = false;
+    document.getElementById('startBtn').textContent = '📷 Start Camera';
+    document.getElementById('stopBtn').disabled = true;
+    document.getElementById('result').className = 'result-info';
+    document.getElementById('result').textContent = '📱 Camera is off';
+}
+
+// ============================================
+// HANDLE QR SCAN
+// ============================================
+function handleScan(guestID) {
+    // Clean the ID
+    guestID = guestID.trim();
     
+    // Play sound
+    playBeep(600, 100);
+
+    document.getElementById('result').className = 'result-info';
+    document.getElementById('result').textContent = '⏳ Checking guest...';
+
     // Send to Google Sheets
     fetch(APP_SCRIPT_URL, {
         method: 'POST',
@@ -321,40 +479,51 @@ function startScanner() {
         },
         body: JSON.stringify({
             action: 'checkin',
-            id: guestID.trim()
+            id: guestID
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok: ' + response.status);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.status === 'success') {
             // ✅ Check-in successful
-            document.getElementById('result').className = 'success';
+            document.getElementById('result').className = 'result-success';
             document.getElementById('result').textContent = '✅ ' + data.name + ' checked in!';
-            playSound('success');
-            updateStats();
+            playBeep(880, 200);
+            document.getElementById('status-text').textContent = '🎉 Check-in successful!';
             
+            // Vibrate on mobile
+            if (navigator.vibrate) navigator.vibrate(200);
+
         } else if (data.status === 'walkin') {
-            // 🆕 Walk-in - Show registration form
-            document.getElementById('result').className = 'info';
+            // 🆕 Walk-in
+            document.getElementById('result').className = 'result-walkin';
             document.getElementById('result').textContent = '🆕 New guest! Please register below.';
             document.getElementById('walkin-form').style.display = 'block';
-            playSound('walkin');
-            
+            playBeep(500, 300);
+            if (navigator.vibrate) navigator.vibrate([100, 100, 100]);
+
         } else if (data.status === 'error') {
             // ❌ Error
-            document.getElementById('result').className = 'error';
+            document.getElementById('result').className = 'result-error';
             document.getElementById('result').textContent = data.message || '❌ Error!';
-            playSound('error');
-            
+            playBeep(300, 400);
+            if (navigator.vibrate) navigator.vibrate(500);
+
         } else {
-            document.getElementById('result').className = 'error';
+            document.getElementById('result').className = 'result-error';
             document.getElementById('result').textContent = '❌ Unknown error';
         }
     })
     .catch(error => {
-        document.getElementById('result').className = 'error';
-        document.getElementById('result').textContent = '❌ Network error! Check connection.';
-        console.error('Error:', error);
+        console.error('Fetch error:', error);
+        document.getElementById('result').className = 'result-error';
+        document.getElementById('result').textContent = '❌ Network error! Check URL.';
+        document.getElementById('status-text').textContent = '⚠️ Error: ' + error.message;
     });
 }
 
@@ -363,20 +532,19 @@ function startScanner() {
 // ============================================
 function registerWalkin(e) {
     e.preventDefault();
-    
+
     const name = document.getElementById('name').value.trim();
     const email = document.getElementById('email').value.trim();
     const phone = document.getElementById('phone').value.trim();
-    
+
     if (!name || !email) {
         alert('Please fill in Name and Email');
         return;
     }
-    
-    // Show loading
-    document.getElementById('result').className = 'info';
+
+    document.getElementById('result').className = 'result-info';
     document.getElementById('result').textContent = '⏳ Registering...';
-    
+
     fetch(APP_SCRIPT_URL, {
         method: 'POST',
         headers: {
@@ -392,97 +560,84 @@ function registerWalkin(e) {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            document.getElementById('result').className = 'success';
+            document.getElementById('result').className = 'result-success';
             document.getElementById('result').textContent = '✅ ' + data.name + ' registered & checked in!';
             document.getElementById('walkin-form').style.display = 'none';
-            document.getElementById('walkin-form-form').reset();
-            playSound('success');
-            updateStats();
+            document.getElementById('walkin-form').reset();
+            playBeep(880, 300);
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
         } else {
-            document.getElementById('result').className = 'error';
+            document.getElementById('result').className = 'result-error';
             document.getElementById('result').textContent = '❌ Registration failed: ' + (data.message || 'Error');
         }
     })
     .catch(error => {
-        document.getElementById('result').className = 'error';
+        document.getElementById('result').className = 'result-error';
         document.getElementById('result').textContent = '❌ Network error!';
     });
 }
 
 function closeWalkinForm() {
     document.getElementById('walkin-form').style.display = 'none';
-    document.getElementById('walkin-form-form').reset();
-    document.getElementById('result').className = 'info';
+    document.getElementById('walkin-form').reset();
+    document.getElementById('result').className = 'result-info';
     document.getElementById('result').textContent = '📱 Scan a QR code';
+    document.getElementById('status-text').textContent = '✅ Ready to scan';
 }
 
 // ============================================
-// STATS DASHBOARD
+// BEEP SOUND (Works on Mobile)
 // ============================================
-function updateStats() {
-    fetch(APP_SCRIPT_URL + '?action=getStats')
-        .then(response => response.json())
-        .then(data => {
-            if (data && data.total !== undefined) {
-                document.getElementById('total-count').textContent = data.total;
-                document.getElementById('checked-count').textContent = data.checked;
-            }
-        })
-        .catch(() => {});
-}
-
-// ============================================
-// SOUND EFFECTS (Simple)
-// ============================================
-function playSound(type) {
+function playBeep(freq, duration) {
     try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
         
         oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
+        gainNode.connect(audioCtx.destination);
         
-        if (type === 'success') {
-            // Happy ascending tone
-            oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
-            oscillator.frequency.setValueAtTime(1100, audioContext.currentTime + 0.1);
-            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-            oscillator.start();
-            oscillator.stop(audioContext.currentTime + 0.2);
-        } else if (type === 'error') {
-            // Low sad tone
-            oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
-            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-            oscillator.start();
-            oscillator.stop(audioContext.currentTime + 0.3);
-        } else if (type === 'scan') {
-            // Quick beep
-            oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
-            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-            oscillator.start();
-            oscillator.stop(audioContext.currentTime + 0.05);
-        } else if (type === 'walkin') {
-            // Attention sound
-            oscillator.frequency.setValueAtTime(500, audioContext.currentTime);
-            oscillator.frequency.setValueAtTime(700, audioContext.currentTime + 0.1);
-            gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-            oscillator.start();
-            oscillator.stop(audioContext.currentTime + 0.2);
-        }
+        oscillator.frequency.value = freq;
+        oscillator.type = 'sine';
+        gainNode.gain.value = 0.15;
+        
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + duration / 1000);
     } catch(e) {
         // Silent fallback
     }
 }
 
 // ============================================
-// LOAD STATS ON PAGE LOAD
+// AUTO-START ON MOBILE (User Gesture Required)
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
-    updateStats();
-    // Auto-start camera
-    setTimeout(startScanner, 500);
+    // Show start button prominently on mobile
+    document.getElementById('status-text').textContent = '📱 Tap "Start Camera" to begin';
+    
+    // Check if running on mobile
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile) {
+        document.getElementById('status-text').textContent = '📱 Tap "Start Camera" to begin scanning';
+    }
 });
+
+// ============================================
+// HANDLE PAGE VISIBILITY (Optimize Performance)
+// ============================================
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden && isScanning) {
+        // Pause scanning when tab is hidden
+        if (scanner) {
+            try {
+                scanner.reset();
+            } catch(e) {}
+        }
+    }
+});
+
+console.log('📱 Event Scanner loaded successfully!');
+console.log('🔗 API URL:', APP_SCRIPT_URL);
 </script>
 
 </body>
